@@ -28,7 +28,7 @@ cycles instr = case instr of
   LDH_a_a8    -> 12
   LD_r16_d16  -> 12
   LD_sp_hl    -> 8
-  LDHL_sp_d8  -> 12
+  LDHL_sp_s8  -> 12
   LD_a16_sp   -> 20
   PUSH_r16    -> 16
   POP_r16     -> 12
@@ -117,104 +117,145 @@ cyclesFromCCSuccess instr = case instr of
 
 --
 
-putAFromRam8 :: A16 -> GB ()
+putAFromRam8 :: A16 -> GB
 putAFromRam8 a =
   do d <- getRam8 a
      putA d
 
-putRam8FromA :: A16 -> GB ()
+putRam8FromA :: A16 -> GB
 putRam8FromA a =
   do d <- getA
      putRam8 a d
 
 --
 
-putAFromRam8Offset :: A8 -> GB ()
+putAFromRam8Offset :: A8 -> GB
 putAFromRam8Offset a = putAFromRam8 (0xff00 + num a)
 
-putRam8OffsetFromA :: A8 -> GB ()
+putRam8OffsetFromA :: A8 -> GB
 putRam8OffsetFromA a = putRam8FromA (0xff00 + num a)
 
 --
 
-ld_r8_r8 :: R8 -> R8 -> GB ()
+ld_r8_r8 :: R8 -> R8 -> GB
 ld_r8_r8 r0 r1 =
   do d1 <- getR8 r1
      putR8 r0 d1
 
-ld_r8_ihl :: R8 -> GB ()
+ld_r8_ihl :: R8 -> GB
 ld_r8_ihl r =
   do d <- getIHL
      putR8 r d
 
-ld_ihl_r8 :: R8 -> GB ()
+ld_ihl_r8 :: R8 -> GB
 ld_ihl_r8 r =
   do d <- getR8 r
      putIHL d
 
-ld_ihl_d8 :: D8 -> GB ()
+ld_ihl_d8 :: D8 -> GB
 ld_ihl_d8 d = putIHL d
 
-ld_a_idr :: R16 -> GB ()
+ld_a_idr :: R16 -> GB
 ld_a_idr r =
   do a <- getR16 r
      putAFromRam8 a
 
-ld_a_a16 :: A16 -> GB ()
+ld_a_a16 :: A16 -> GB
 ld_a_a16 = putAFromRam8
 
-ld_a_d8 :: D8 -> GB ()
+ld_a_d8 :: D8 -> GB
 ld_a_d8 = putA
 
-ld_idr_a :: R16 -> GB ()
+ld_idr_a :: R16 -> GB
 ld_idr_a r =
   do a <- getR16 r
      putRam8FromA a
 
-ld_a16_a :: A16 -> GB ()
+ld_a16_a :: A16 -> GB
 ld_a16_a = putRam8FromA
 
-ld_a_idr_c :: GB ()
+ld_a_idr_c :: GB
 ld_a_idr_c =
   do a <- getC
      putAFromRam8Offset a
 
-ld_idr_c_a :: GB ()
+ld_idr_c_a :: GB
 ld_idr_c_a =
   do a <- getC
      putRam8OffsetFromA a
 
-ldh_a8_a :: A8 -> GB ()
+ldh_a8_a :: A8 -> GB
 ldh_a8_a a = putRam8OffsetFromA a
 
-ld_r16_d16 :: R16 -> D16 -> GB ()
+ld_r16_d16 :: R16 -> D16 -> GB
 ld_r16_d16 = putR16
 
-ld_sp_hl :: GB ()
+ld_sp_hl :: GB
 ld_sp_hl =
   do d <- getHL
      putSP d
 
-ldhl_sp_d8 :: D8 -> GB ()
-ldhl_sp_d8 d =
-  do let k = num d
-     sp <- getSP
-     let w = sp + k
-     resetZF
-     resetNF
-     setCF (w < sp || w < k)
-     setHF (testBit ((sp .&. 0x0f) + (k .&. 0x0f)) 4)
-     putHL w
+ldhl_sp_s8 :: D8 -> GB
+ldhl_sp_s8 s =
+  sp <- getSP
+  let d = num (0x7 .&. s)
+  if s .*. 0x8 == 0x0 -- is positive?
+     then do let res = sp + d
+                 hf = testBit ((sp .&. 0x0f) + d) 4
+                 cf = res < sp || res < d
+             setFlags False False hf cf
+             putHL res 
+     else do let res = sp - d
+                 hf = (sp .&. 0x0f) < d
+                 cf = res > sp
+             setFlags False False hf cf
+             putHL res 
 
-ld_a16_sp :: A16 -> GB ()
+ld_a16_sp :: A16 -> GB
 ld_a16_sp a =
   do sp <- getSP
      putRam16 a sp
 
-push_r16 :: R16 -> GB ()
+--
+
+push_r16 :: R16 -> GB
 push_r16 r =
   do d <- getR16 r
      putISP d
      decSP 2
+
+pop_r16 :: R16 -> GB
+pop_r16 r =
+  do d <- getISP
+     putR16 r d
+     incSP 2
+
+----
+
+addA_ :: D8 -> GB
+addA_ d =
+  do k <- getA
+     let low  = (d .&. 0x0f) + (k .&. 0x0f)
+         res  = d + k
+     setFlags (res == 0)
+              False
+              (res < d || res < k)
+              (testBit low 4)
+     putA res
+
+add_a_r8 :: R8 -> GB
+add_a_r8 r =
+  do d <- getR8 r
+     addA_ d
+
+add_a_ihl :: GB
+add_a_ihl =
+  do d <- getIHL
+     addA_ d
      
-     
+add_a_d8 :: D8 -> GB
+add_a_d8 = addA_
+
+--
+
+

@@ -4,17 +4,21 @@ import Control.Monad.State.Strict
 import Data.Array.IO
 import Data.IORef
 import Data.Word
+import Data.Int
 import Data.Word.Odd (Word3)
 import Data.ByteString
 
 type D3 = Word3
 type A8 = Word8
 type D8 = Word8
+type S8 = Int8
 type A16 = Word16
 type D16 = Word16
+type S16 = Int16
 type Opcode = Word8
 
-type GB a = StateT Mem IO a
+type GammaBoy a = StateT Mem IO a
+type GB = GammaBoy ()
 
 data Mem = Mem
   { ram :: IOUArray A16 D8
@@ -86,7 +90,7 @@ data Inst
   | LDH_a_a8
   | LD_r16_d16
   | LD_sp_hl
-  | LDHL_sp_d8
+  | LDHL_sp_s8
   | LD_a16_sp
   | PUSH_r16
   | POP_r16

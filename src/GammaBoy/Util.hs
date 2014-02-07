@@ -26,6 +26,9 @@ inc = (+)
 
 --
 
+r8 :: R8 -> Int
+r8 = fromEnum
+
 sepR16 :: R16 -> (R8, R8)
 sepR16 r = case r of
   AF -> (A, F)
@@ -43,10 +46,10 @@ sep16 d =
 cmb8 :: D8 -> D8 -> D16
 cmb8 a b = (shiftL (num a) 4) .|. (num b)
 
-getR8 :: R8 -> GB D8
+getR8 :: R8 -> GammaBoy D8
 getR8 r =
   do rs <- gets regs
-     io (readArray rs (fromEnum r))
+     io (readArray rs (r8 r))
 
 --
 
@@ -65,12 +68,12 @@ getPC_1 = getR8 PC_1
 
 --
 
-getR16 :: R16 -> GB D16
+getR16 :: R16 -> GammaBoy D16
 getR16 r =
   do rs <- gets regs
      let (r0, r1) = sepR16 r
-     d0 <- io (readArray rs (fromEnum r0))
-     d1 <- io (readArray rs (fromEnum r1))
+     d0 <- io (readArray rs (r8 r0))
+     d1 <- io (readArray rs (r8 r1))
      let d0' = num d0
          d1' = num d1
      return (d0' + d1')
@@ -86,10 +89,10 @@ getPC = getR16 PC
 
 --
 
-putR8 :: R8 -> D8 -> GB ()
+putR8 :: R8 -> D8 -> GammaBoy ()
 putR8 r d =
   do rs <- gets regs
-     io (writeArray rs (fromEnum r) d)
+     io (writeArray rs (r8 r) d)
 
 --
 
@@ -108,13 +111,13 @@ putPC_1 = putR8 PC_1
 
 --
 
-putR16 :: R16 -> D16 -> GB ()
+putR16 :: R16 -> D16 -> GammaBoy ()
 putR16 r d =
   do rs <- gets regs
      let (r0, r1) = sepR16 r
          (d0, d1) = sep16 d
-     io (writeArray rs (fromEnum r0) d0)
-     io (writeArray rs (fromEnum r1) d1)
+     io (writeArray rs (r8 r0) d0)
+     io (writeArray rs (r8 r1) d1)
 
 --
 
@@ -127,12 +130,12 @@ putPC = putR16 PC
 
 --
 
-getRam8 :: A16 -> GB D8
+getRam8 :: A16 -> GammaBoy D8
 getRam8 a =
   do rm <- gets ram
      io (readArray rm a)
 
-getRam16 :: A16 -> GB D16
+getRam16 :: A16 -> GammaBoy D16
 getRam16 a =
   do rm <- gets ram
      d0 <- io (readArray rm a)
@@ -149,12 +152,12 @@ getIPC = getPC >>= getRam16
 
 --
 
-putRam8 :: A16 -> D8 -> GB ()
+putRam8 :: A16 -> D8 -> GammaBoy ()
 putRam8 a d =
   do rm <- gets ram
      io (writeArray rm a d)
 
-putRam16 :: A16 -> D16 -> GB ()
+putRam16 :: A16 -> D16 -> GammaBoy ()
 putRam16 a d =
   do rm <- gets ram
      let (d0, d1) = sep16 d
@@ -171,51 +174,31 @@ putIPC d = getPC >>= (flip putRam16) d
 
 --
 
-flagBit :: Flag -> Int
-flagBit flg = case flg of
-  ZF -> 7
-  NF -> 6
-  HF -> 5
-  CF -> 4
+setFlags :: Bool -> Bool -> Bool -> Bool -> GammaBoy ()
+setFlags zf nf cf hf =
+  do let f t e = if t then bit e else 0
+         zb = f zf 7
+         nb = f nf 6
+         cb = f cf 5
+         hb = f nf 4
+         flgs = zb .|. nb .|. cb .|. hb
+     putF flgs
+
+getFlags :: GammaBoy (Bool, Bool, Bool, Bool)
+getFlags =
+  do flgs <- getF
+     let f e = testBit flgs e
+     return (f 7, f 6, f 5, f 4)
 
 --
 
-setFlag :: Flag -> Bool -> GB ()
-setFlag flg test =
-  do d <- getF
-     let f = if test then setBit else clearBit
-     putF (f d (flagBit flg))
+modifyR8 r f =
+  do d <- getR8  r
+     putR8  r (f d)
 
---
-
-setZF = setFlag ZF
-setNF = setFlag NF
-setHF = setFlag HF
-setCF = setFlag CF
-
---
-
-resetZF = setZF False
-resetNF = setNF False
-resetHF = setHF False
-resetCF = setCF False
-
---
-
-modifyGB :: (a -> GB b) -> (a -> b -> GB ())
-         -> a -> (b -> b)
-         -> GB ()
-modifyGB g p r f =
-  do d <- g r
-     p r (f d)
-
--- 
-
-modifyR8 :: R8 -> (D8 -> D8) -> GB ()
-modifyR8 = modifyGB getR8 putR8
-
-modifyR16 :: R16 -> (D16 -> D16) -> GB ()
-modifyR16 = modifyGB getR16 putR16
+modifyR16 r f =
+  do d <- getR16 r
+     putR16 r (f d)
 
 --
 
