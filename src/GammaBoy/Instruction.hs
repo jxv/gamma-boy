@@ -1,6 +1,7 @@
-module GammaBoy.Instruction where
+module GammaBoy.Inst where
 
 import Control.Monad.State.Strict
+import Control.Applicative
 import Data.Array.IO
 import Data.IORef
 import Data.Word
@@ -10,7 +11,7 @@ import Data.Bits
 import GammaBoy.Types
 import GammaBoy.Util
 
-cycles :: (Integral a) => Instruction -> a
+cycles :: (Integral a) => Inst -> a
 cycles instr = case instr of
   LD_r8_r8    -> 4
   LD_r8_ihl   -> 8
@@ -29,8 +30,8 @@ cycles instr = case instr of
   LD_sp_hl    -> 8
   LDHL_sp_d8  -> 12
   LD_a16_sp   -> 20
-  PUSH_s16    -> 16
-  POP_s16     -> 12
+  PUSH_r16    -> 16
+  POP_r16     -> 12
   ADD_a_r8    -> 4
   ADD_a_ihl   -> 8
   ADD_a_d8    -> 8
@@ -106,7 +107,7 @@ cycles instr = case instr of
   RETI        -> 8
   PREFIX_CB   -> 4
 
-cyclesFromCCSuccess :: (Integral a) => Instruction -> a
+cyclesFromCCSuccess :: (Integral a) => Inst -> a
 cyclesFromCCSuccess instr = case instr of
   JP_cc_a16   -> 4
   JR_cc_a8    -> 4
@@ -116,99 +117,104 @@ cyclesFromCCSuccess instr = case instr of
 
 --
 
-putAFromRAM :: A16 -> GammaBoy ()
-putAFromRAM a =
-  do d <- getRAM a
+putAFromRam8 :: A16 -> GB ()
+putAFromRam8 a =
+  do d <- getRam8 a
      putA d
 
-putRAMFromA :: A16 -> GammaBoy ()
-putRAMFromA a =
+putRam8FromA :: A16 -> GB ()
+putRam8FromA a =
   do d <- getA
-     putRAM a d
+     putRam8 a d
 
 --
 
-putAFromRAMOffset :: A8 -> GammaBoy ()
-putAFromRAMOffset a = putAFromRAM (0xff00 + num a)
+putAFromRam8Offset :: A8 -> GB ()
+putAFromRam8Offset a = putAFromRam8 (0xff00 + num a)
 
-putRAMOffsetFromA :: A8 -> GammaBoy ()
-putRAMOffsetFromA a = putRAMFromA (0xff00 + num a)
+putRam8OffsetFromA :: A8 -> GB ()
+putRam8OffsetFromA a = putRam8FromA (0xff00 + num a)
 
 --
 
-ld_r8_r8 :: R8 -> R8 -> GammaBoy ()
+ld_r8_r8 :: R8 -> R8 -> GB ()
 ld_r8_r8 r0 r1 =
   do d1 <- getR8 r1
      putR8 r0 d1
 
-ld_r8_ihl :: R8 -> GammaBoy ()
+ld_r8_ihl :: R8 -> GB ()
 ld_r8_ihl r =
   do d <- getIHL
      putR8 r d
 
-ld_ihl_r8 :: R8 -> GammaBoy ()
+ld_ihl_r8 :: R8 -> GB ()
 ld_ihl_r8 r =
   do d <- getR8 r
      putIHL d
 
-ld_ihl_d8 :: D8 -> GammaBoy ()
+ld_ihl_d8 :: D8 -> GB ()
 ld_ihl_d8 d = putIHL d
 
-ld_a_idr :: R16 -> GammaBoy ()
+ld_a_idr :: R16 -> GB ()
 ld_a_idr r =
   do a <- getR16 r
-     putAFromRAM a
+     putAFromRam8 a
 
-ld_a_a16 :: A16 -> GammaBoy ()
-ld_a_a16 = putAFromRAM
+ld_a_a16 :: A16 -> GB ()
+ld_a_a16 = putAFromRam8
 
-ld_a_d8 :: D8 -> GammaBoy ()
+ld_a_d8 :: D8 -> GB ()
 ld_a_d8 = putA
 
-ld_idr_a :: R16 -> GammaBoy ()
+ld_idr_a :: R16 -> GB ()
 ld_idr_a r =
   do a <- getR16 r
-     putRAMFromA a
+     putRam8FromA a
 
-ld_a16_a :: A16 -> GammaBoy ()
-ld_a16_a = putRAMFromA
+ld_a16_a :: A16 -> GB ()
+ld_a16_a = putRam8FromA
 
-ld_a_idr_c :: GammaBoy ()
+ld_a_idr_c :: GB ()
 ld_a_idr_c =
   do a <- getC
-     putAFromRAMOffset a
+     putAFromRam8Offset a
 
-ld_idr_c_a :: GammaBoy ()
+ld_idr_c_a :: GB ()
 ld_idr_c_a =
   do a <- getC
-     putRAMOffsetFromA a
+     putRam8OffsetFromA a
 
-ldh_a8_a :: A8 -> GammaBoy ()
-ldh_a8_a a = putRAMOffsetFromA a
+ldh_a8_a :: A8 -> GB ()
+ldh_a8_a a = putRam8OffsetFromA a
 
-ld_r16_d16 :: R16 -> D16 -> GammaBoy ()
+ld_r16_d16 :: R16 -> D16 -> GB ()
 ld_r16_d16 = putR16
 
-ld_sp_hl :: GammaBoy ()
+ld_sp_hl :: GB ()
 ld_sp_hl =
   do d <- getHL
      putSP d
 
-ldhl_sp_d8 :: D8 -> GammaBoy ()
+ldhl_sp_d8 :: D8 -> GB ()
 ldhl_sp_d8 d =
   do let k = num d
-     v <- getSP
-     let w = v + k
+     sp <- getSP
+     let w = sp + k
      resetZF
      resetNF
-     setCF (w < v || w < k)
-     setHF (testBit ((v .&. 0x0f) + (k .&. 0x0f)) 4)
+     setCF (w < sp || w < k)
+     setHF (testBit ((sp .&. 0x0f) + (k .&. 0x0f)) 4)
      putHL w
 
-ld_a16_sp :: A16 -> GammaBoy ()
+ld_a16_sp :: A16 -> GB ()
 ld_a16_sp a =
-  do d0 <- getSP_0
-     d1 <- getSP_1
-     putRAM a       d0
-     putRAM (a + 1) d1
+  do sp <- getSP
+     putRam16 a sp
 
+push_r16 :: R16 -> GB ()
+push_r16 r =
+  do d <- getR16 r
+     putISP d
+     decSP 2
+     
+     

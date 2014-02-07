@@ -14,9 +14,9 @@ type A16 = Word16
 type D16 = Word16
 type Opcode = Word8
 
-type GammaBoy a = StateT Memory IO a
+type GB a = StateT Mem IO a
 
-data Memory = Memory
+data Mem = Mem
   { ram :: IOUArray A16 D8
   , regs :: IOArray Int D8
   }
@@ -70,7 +70,7 @@ data RA -- Restart Address
   | RA_38h
   deriving (Bounded, Enum, Eq, Show)
 
-data Instruction
+data Inst
   = LD_r8_r8
   | LD_r8_ihl
   | LD_ihl_r8
@@ -88,8 +88,8 @@ data Instruction
   | LD_sp_hl
   | LDHL_sp_d8
   | LD_a16_sp
-  | PUSH_s16
-  | POP_s16
+  | PUSH_r16
+  | POP_r16
   | ADD_a_r8
   | ADD_a_ihl
   | ADD_a_d8
