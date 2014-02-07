@@ -17,8 +17,7 @@ type D16 = Word16
 type S16 = Int16
 type Opcode = Word8
 
-type GammaBoy a = StateT Mem IO a
-type GB = GammaBoy ()
+type GB a = StateT Mem IO a
 
 data Mem = Mem
   { ram :: IOUArray A16 D8
