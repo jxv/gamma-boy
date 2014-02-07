@@ -190,7 +190,7 @@ getFlags =
 
 putFlags :: Bool -> Bool -> Bool -> Bool -> GB ()
 putFlags zf nf cf hf =
-  do let f t e flg = if t then bit (flagBit flg) else 0
+  do let f t flg = if t then bit (flagBit flg) else 0
          zb = f zf ZF 
          nb = f nf NF 
          cb = f cf CF

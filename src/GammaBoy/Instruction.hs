@@ -203,12 +203,12 @@ ldhl_sp_s8 s =
         then do let res = sp - d
                     hf = (sp .&. 0x000f) < d
                     cf = res > sp
-                setFlags False False hf cf
+                putFlags False False hf cf
                 putHL res 
         else do let res = sp + d
                     hf = testBit ((sp .&. 0x000f) + d) 4
                     cf = res < sp || res < d
-                setFlags False False hf cf
+                putFlags False False hf cf
                 putHL res 
 
 ld_a16_sp :: A16 -> GB ()
@@ -240,7 +240,7 @@ addA_ d =
          zf = res == 0
          cf = res < d || res < k
          hf = testBit low 4
-     setFlags zf False hf cf
+     putFlags zf False hf cf
      putA res
 
 --
@@ -271,7 +271,7 @@ adcA_ d =
          zf  = res == 0
          cf' = res < d || res < k
          hf  = testBit low 4
-     setFlags zf False hf cf'
+     putFlags zf False hf cf'
      putA res
 
 --
@@ -294,12 +294,12 @@ adc_a_d8 = adcA_
 
 subA_ :: D8 -> GB ()
 subA_ d =
-  do k <- getA
-     let res  = k - d
+  do da <- getA
+     let res  = da - d
          zf = res == 0
-         cf = k > res
+         cf = da > res
          hf = (da .&. 0x0f) < (d .&. 0x0f)
-     setFlags zf False hf cf
+     putFlags zf False hf cf
      putA res
 
 --
@@ -330,7 +330,7 @@ sbcA_ d =
          zf = res == 0
          cf' = k > res
          hf = (low .&. 0x0f) > k
-     setFlags zf False hf cf'
+     putFlags zf False hf cf'
      putA res
 
 --
@@ -356,7 +356,7 @@ andA_ d =
      let res = d .&. k
          zf = res == 0
          hf = True
-     setFlags zf False hf False
+     putFlags zf False hf False
      putA res
 
 --
@@ -382,7 +382,7 @@ xorA_ d =
   do da <- getA
      let res = da `xor` d
          zf = res == 0
-     setFlags zf False False False
+     putFlags zf False False False
      putA res
 
 xor_a_r8 :: R8 -> GB ()
@@ -406,7 +406,7 @@ orA_ d =
   do da <- getA
      let res = da .|. d
          zf = res == 0
-     setFlags zf False False False
+     putFlags zf False False False
      putA res
 
 --
@@ -434,7 +434,7 @@ cpA_ d =
          zf = res == 0
          cf = da < d
          hf = (da .&. 0x0f) < (d .&. 0x0f)
-     setFlags zf False hf cf
+     putFlags zf False hf cf
 
 --
 
