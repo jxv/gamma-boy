@@ -197,19 +197,19 @@ ld_sp_hl =
 
 ldhl_sp_s8 :: D8 -> GB
 ldhl_sp_s8 s =
-  sp <- getSP
-  let d = num (0x7 .&. s)
-  if s .*. 0x8 == 0x0 -- is positive?
-     then do let res = sp + d
-                 hf = testBit ((sp .&. 0x0f) + d) 4
-                 cf = res < sp || res < d
-             setFlags False False hf cf
-             putHL res 
-     else do let res = sp - d
-                 hf = (sp .&. 0x0f) < d
-                 cf = res > sp
-             setFlags False False hf cf
-             putHL res 
+  do sp <- getSP
+     let d = num (0x7f .&. s)
+     if isSigned s -- is negative?
+        then do let res = sp - d
+                    hf = (sp .&. 0x000f) < d
+                    cf = res > sp
+                setFlags False False hf cf
+                putHL res 
+        else do let res = sp + d
+                    hf = testBit ((sp .&. 0x000f) + d) 4
+                    cf = res < sp || res < d
+                setFlags False False hf cf
+                putHL res 
 
 ld_a16_sp :: A16 -> GB
 ld_a16_sp a =
@@ -237,10 +237,10 @@ addA_ d =
   do k <- getA
      let low  = (d .&. 0x0f) + (k .&. 0x0f)
          res  = d + k
-     setFlags (res == 0)
-              False
-              (res < d || res < k)
-              (testBit low 4)
+         zf = res == 0
+         cf = res < d || res < k
+         hf = testBit low 4
+     setFlags zf False cf hf
      putA res
 
 add_a_r8 :: R8 -> GB
