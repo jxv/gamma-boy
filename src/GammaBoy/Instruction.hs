@@ -1,4 +1,4 @@
-module GammaBoy.Inst where
+module GammaBoy.Instruction where
 
 import Control.Monad.State.Strict
 import Control.Applicative
@@ -16,7 +16,7 @@ import GammaBoy.Util
 
 
 cycles :: (Integral a) => Inst -> a
-cycles instr = case instr of
+cycles inst = case inst of
   LD_r8_r8    -> 4
   LD_r8_ihl   -> 8
   LD_ihl_r8   -> 8
@@ -112,7 +112,7 @@ cycles instr = case instr of
   PREFIX_CB   -> 4
 
 cyclesFromCCSuccess :: (Integral a) => Inst -> a
-cyclesFromCCSuccess instr = case instr of
+cyclesFromCCSuccess inst = case inst of
   JP_cc_a16   -> 4
   JR_cc_a8    -> 4
   CALL_cc_a16 -> 12
@@ -123,48 +123,30 @@ cyclesFromCCSuccess instr = case instr of
 
 
 putAFromRam8 :: A16 -> GB ()
-putAFromRam8 a =
-  do d <- getRam8 a
-     putA d
+putAFromRam8 a = putA =<< getRam8 a
 
 putRam8FromA :: A16 -> GB ()
-putRam8FromA a =
-  do d <- getA
-     putRam8 a d
+putRam8FromA a = putRam8 a =<< getA
+
+offsetFF00h :: A8 -> A16
+offsetFF00h a = 0xff00 + num a
 
 --
 
-putAFromRam8Offset :: A8 -> GB ()
-putAFromRam8Offset a = putAFromRam8 (0xff00 + num a)
-
-putRam8OffsetFromA :: A8 -> GB ()
-putRam8OffsetFromA a = putRam8FromA (0xff00 + num a)
-
-----
-
-
 ld_r8_r8 :: R8 -> R8 -> GB ()
-ld_r8_r8 r0 r1 =
-  do d1 <- getR8 r1
-     putR8 r0 d1
+ld_r8_r8 r0 r1 = putR8 r0 =<< getR8 r1
 
 ld_r8_ihl :: R8 -> GB ()
-ld_r8_ihl r =
-  do d <- getIHL
-     putR8 r d
+ld_r8_ihl r = putR8 r =<< getIHL
 
 ld_ihl_r8 :: R8 -> GB ()
-ld_ihl_r8 r =
-  do d <- getR8 r
-     putIHL d
+ld_ihl_r8 r = putIHL =<< getR8 r
 
 ld_ihl_d8 :: D8 -> GB ()
-ld_ihl_d8 d = putIHL d
+ld_ihl_d8 = putIHL 
 
 ld_a_idr :: R16 -> GB ()
-ld_a_idr r =
-  do a <- getR16 r
-     putAFromRam8 a
+ld_a_idr r = putAFromRam8 =<< getR16 r
 
 ld_a_a16 :: A16 -> GB ()
 ld_a_a16 = putAFromRam8
@@ -173,33 +155,25 @@ ld_a_d8 :: D8 -> GB ()
 ld_a_d8 = putA
 
 ld_idr_a :: R16 -> GB ()
-ld_idr_a r =
-  do a <- getR16 r
-     putRam8FromA a
+ld_idr_a r = putRam8FromA =<< getR16 r
 
 ld_a16_a :: A16 -> GB ()
 ld_a16_a = putRam8FromA
 
 ld_a_idr_c :: GB ()
-ld_a_idr_c =
-  do a <- getC
-     putAFromRam8Offset a
+ld_a_idr_c = putAFromRam8 . offsetFF00h =<< getC
 
 ld_idr_c_a :: GB ()
-ld_idr_c_a =
-  do a <- getC
-     putRam8OffsetFromA a
+ld_idr_c_a = putRam8FromA . offsetFF00h =<< getC
 
 ldh_a8_a :: A8 -> GB ()
-ldh_a8_a a = putRam8OffsetFromA a
+ldh_a8_a a = putRam8FromA (offsetFF00h a)
 
 ld_r16_d16 :: R16 -> D16 -> GB ()
 ld_r16_d16 = putR16
 
 ld_sp_hl :: GB ()
-ld_sp_hl =
-  do d <- getHL
-     putSP d
+ld_sp_hl = putSP =<< getHL
 
 ldhl_sp_s8 :: D8 -> GB ()
 ldhl_sp_s8 s =
@@ -219,11 +193,7 @@ ldhl_sp_s8 s =
   where low = (.&. 0x000f)
 
 ld_a16_sp :: A16 -> GB ()
-ld_a16_sp a =
-  do sp <- getSP
-     putRam16 a sp
-
---
+ld_a16_sp a = putRam16 a =<< getSP
 
 push_r16 :: R16 -> GB ()
 push_r16 r =
@@ -272,7 +242,7 @@ add_a_r8 = addA_ . getR8
 
 add_a_ihl :: GB ()
 add_a_ihl = addA_ getIHL
-     
+
 add_a_d8 :: D8 -> GB ()
 add_a_d8 = addA_ . return
 
@@ -336,10 +306,11 @@ sbc_a_d8 = sbcA_ . return
 ----
 
 
-bitOpA_ :: (D8 -> D8) -> GB ()
-bitOpA_ f =
-  do k <- getA
-     let res = f k
+bitOpA_ :: (D8 -> D8 -> D8) -> GB D8 -> GB ()
+bitOpA_ f md =
+  do d <- md
+     k <- getA
+     let res = k `f` d
          zf = res == 0
          hf = True
      putFlags zf False hf False
@@ -348,43 +319,31 @@ bitOpA_ f =
 --
 
 and_a_r8 :: R8 -> GB ()
-and_a_r8 r = 
-  do d <- getR8 r
-     bitOpA_ (.&. d)
+and_a_r8 = bitOpA_ (.&.) . getR8
 
 and_a_ihl :: GB ()
-and_a_ihl =
-  do d <- getIHL
-     bitOpA_ (.&. d)
+and_a_ihl = bitOpA_ (.&.) getIHL
 
 and_a_d8 :: D8 -> GB ()
-and_a_d8 = bitOpA_ . (.&.)
+and_a_d8 = bitOpA_ (.&.) . return
 
 xor_a_r8 :: R8 -> GB ()
-xor_a_r8 r =
-  do d <- getR8 r
-     bitOpA_ (xor d)
+xor_a_r8 = bitOpA_ xor . getR8
 
 xor_a_ihl :: GB ()
-xor_a_ihl =
-  do d <- getIHL
-     bitOpA_ (xor d)
+xor_a_ihl = bitOpA_ xor getIHL
 
 xor_a_d8 :: D8 -> GB ()
-xor_a_d8 = bitOpA_ . xor
+xor_a_d8 = bitOpA_ xor. return
 
 or_a_r8 :: R8 -> GB ()
-or_a_r8 r =
-  do d <- getR8 r
-     bitOpA_ (.|. d)
+or_a_r8 = bitOpA_ (.|.) . getR8
 
 or_a_ihl :: GB ()
-or_a_ihl =
-  do d <- getIHL
-     bitOpA_ (.|. d)
+or_a_ihl = bitOpA_ (.|.) getIHL
 
 or_a_d8 :: D8 -> GB ()
-or_a_d8 = bitOpA_ . (.|.)
+or_a_d8 = bitOpA_ (.|.) . return
 
 ----
 
@@ -458,7 +417,7 @@ add_hl_r16 r =
      putFlags zf False hf cf
      putHL res
   where
-    low x = x .&. 0x0fff
+    low = (.&. 0x0fff)
 
 add_sp_s8 :: D8 -> GB ()
 add_sp_s8 s =
@@ -598,6 +557,7 @@ srl_ihl :: GB ()
 srl_ihl = mvBits getIHL putIHL shiftR 0
 
 ----
+
 
 bitD3 :: GB D8 -> (D8 -> GB ()) -> D3 -> GB ()
 bitD3 g p d3 =
