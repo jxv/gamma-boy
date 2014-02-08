@@ -122,7 +122,7 @@ data Inst
   | DEC_r8
   | DEC_ihl
   | ADD_hl_r16
-  | ADD_sp_d8
+  | ADD_sp_s8
   | INC_r16
   | DEC_r16
   | DAA
