@@ -27,6 +27,9 @@ dec = subtract
 inc :: (Num a) => a -> a -> a
 inc = (+)
 
+shiftR' :: D8 -> Int -> D8
+shiftR' d s = (shiftR d s) .|. (d .&. (complement (shiftR d 0xff)))
+
 -----
 
 

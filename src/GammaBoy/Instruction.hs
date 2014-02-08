@@ -579,3 +579,41 @@ rr_r8 r = mvBits (getR8 r) (putR8 r) rotateR 0
 rr_ihl :: R8 -> GB ()
 rr_ihl r = mvBits getIHL putIHL rotateR 0
 
+sla_r8 :: R8 -> GB ()
+sla_r8 r = mvBits (getR8 r) (putR8 r) shiftL 7
+
+sla_ihl :: GB ()
+sla_ihl = mvBits getIHL putIHL shiftL 7
+
+sra_r8 :: R8 -> GB ()
+sra_r8 r = mvBits (getR8 r) (putR8 r) shiftR' 0
+
+sra_ihl :: GB ()
+sra_ihl = mvBits getIHL putIHL shiftR' 0
+
+srl_r8 :: R8 -> GB ()
+srl_r8 r = mvBits (getR8 r) (putR8 r) shiftR 0
+
+srl_ihl :: GB ()
+srl_ihl = mvBits getIHL putIHL shiftR 0
+
+----
+
+bitD3 :: GB D8 -> (D8 -> GB ()) -> D3 -> GB ()
+bitD3 g p d3 =
+  do d8 <- g
+     cf <- getCF
+     let res = d8 .&. (num d3)
+         zf = res == 0
+     putFlags zf False True cf
+     p res
+
+--
+
+bit_d3_r8 :: D3 -> R8 -> GB ()
+bit_d3_r8 d r = bitD3 (getR8 r) (putR8 r) d
+
+bit_d3_ihl :: D3 -> GB ()
+bit_d3_ihl = bitD3 getIHL putIHL
+
+
