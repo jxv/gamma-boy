@@ -12,6 +12,9 @@ import Foreign.Marshal.Utils (fromBool)
 import GammaBoy.Types
 import GammaBoy.Util
 
+----
+
+
 cycles :: (Integral a) => Inst -> a
 cycles instr = case instr of
   LD_r8_r8    -> 4
@@ -116,7 +119,8 @@ cyclesFromCCSuccess instr = case instr of
   RET_cc      -> 12
   _ -> 0
 
---
+----
+
 
 putAFromRam8 :: A16 -> GB ()
 putAFromRam8 a =
@@ -136,7 +140,8 @@ putAFromRam8Offset a = putAFromRam8 (0xff00 + num a)
 putRam8OffsetFromA :: A8 -> GB ()
 putRam8OffsetFromA a = putRam8FromA (0xff00 + num a)
 
---
+----
+
 
 ld_r8_r8 :: R8 -> R8 -> GB ()
 ld_r8_r8 r0 r1 =
@@ -202,15 +207,16 @@ ldhl_sp_s8 s =
      let d = num (0x7f .&. s)
      if testBit s 7
         then do let res = sp - d
-                    hf = (sp .&. 0x000f) < d
+                    hf = low sp < d
                     cf = res > sp
                 putFlags False False hf cf
                 putHL res 
         else do let res = sp + d
-                    hf = testBit ((sp .&. 0x000f) + d) 4
+                    hf = testBit (low sp + d) 4
                     cf = res < sp || res < d
                 putFlags False False hf cf
                 putHL res 
+  where low = (.&. 0x000f)
 
 ld_a16_sp :: A16 -> GB ()
 ld_a16_sp a =
@@ -233,13 +239,28 @@ pop_r16 r =
 
 ----
 
-addA_ :: D8 -> GB ()
-addA_ d =
-  do k <- getA
-     let res  = d + k
+
+addA_ :: GB D8 -> GB ()
+addA_ md =
+  do d <- md
+     da <- getA
+     let res  = d + da
          zf = res == 0
-         cf = res < d || res < k
-         hf = testBit (low d + low k) 4
+         cf = res < d || res < da
+         hf = testBit (low d + low da) 4
+     putFlags zf False hf cf
+     putA res
+   where low = (.&. 0x0f)
+
+adcA_ :: GB D8 -> GB ()
+adcA_ md =
+  do d <- md
+     da <- getA
+     cb <- fromBool <$> getCF
+     let res  = d + da + cb
+         zf = res == 0
+         cf = res < d || res < da
+         hf = testBit (low d + low da + cb) 4
      putFlags zf False hf cf
      putA res
    where low = (.&. 0x0f)
@@ -247,54 +268,30 @@ addA_ d =
 --
 
 add_a_r8 :: R8 -> GB ()
-add_a_r8 r =
-  do d <- getR8 r
-     addA_ d
+add_a_r8 = addA_ . getR8
 
 add_a_ihl :: GB ()
-add_a_ihl =
-  do d <- getIHL
-     addA_ d
+add_a_ihl = addA_ getIHL
      
 add_a_d8 :: D8 -> GB ()
-add_a_d8 = addA_
-
-
-----
-
-adcA_ :: D8 -> GB ()
-adcA_ d =
-  do da <- getA
-     cb <- fromBool <$> getCF
-     let res = da + d + cb
-         zf = res == 0
-         cf = res < da || res < d
-         hf = testBit (low da + low d + cb) 4
-     putFlags zf False hf cf
-     putA res
-   where low = (.&. 0x0f)
-
---
+add_a_d8 = addA_ . return
 
 adc_a_r8 :: R8 -> GB ()
-adc_a_r8 r =
-  do d <- getR8 r
-     adcA_ d
+adc_a_r8 = adcA_ . getR8
 
 adc_a_ihl :: GB ()
-adc_a_ihl =
-  do d <- getIHL
-     adcA_ d
+adc_a_ihl = adcA_ getIHL
      
 adc_a_d8 :: D8 -> GB ()
-adc_a_d8 = adcA_
-
+adc_a_d8 = adcA_ . return
 
 ----
 
-subA_ :: D8 -> GB ()
-subA_ d =
-  do da <- getA
+
+subA_ :: GB D8 -> GB ()
+subA_ md =
+  do d <- md
+     da <- getA
      let res  = da - d
          zf = res == 0
          cf = da > res
@@ -303,27 +300,10 @@ subA_ d =
      putA res
    where low = (.&. 0x0f)
 
---
-
-sub_a_r8 :: R8 -> GB ()
-sub_a_r8 r =
-  do d <- getR8 r
-     subA_ d
-
-sub_a_ihl :: GB ()
-sub_a_ihl =
-  do d <- getIHL
-     subA_ d
-     
-sub_a_d8 :: D8 -> GB ()
-sub_a_d8 = subA_
-
-
-----
-
-sbcA_ :: D8 -> GB ()
-sbcA_ d =
-  do da <- getA
+sbcA_ :: GB D8 -> GB ()
+sbcA_ md =
+  do d <- md
+     da <- getA
      cb <- fromBool <$> getCF
      let res  = da - d + cb
          zf = res == 0
@@ -335,18 +315,23 @@ sbcA_ d =
 
 --
 
+sub_a_r8 :: R8 -> GB ()
+sub_a_r8 = subA_ . getR8
+
+sub_a_ihl :: GB ()
+sub_a_ihl = subA_ getIHL
+     
+sub_a_d8 :: D8 -> GB ()
+sub_a_d8 = subA_ . return
+
 sbc_a_r8 :: R8 -> GB ()
-sbc_a_r8 r =
-  do d <- getR8 r
-     sbcA_ d
+sbc_a_r8 = sbcA_ . getR8
 
 sbc_a_ihl :: GB ()
-sbc_a_ihl =
-  do d <- getIHL
-     sbcA_ d
-     
+sbc_a_ihl = sbcA_ getIHL
+
 sbc_a_d8 :: D8 -> GB ()
-sbc_a_d8 = sbcA_
+sbc_a_d8 = sbcA_ . return
 
 ----
 
@@ -404,9 +389,10 @@ or_a_d8 = bitOpA_ . (.|.)
 ----
 
 
-cpA_ :: D8 -> GB ()
-cpA_ d =
-  do da <- getA
+cpA_ :: GB D8 -> GB ()
+cpA_ md =
+  do d <- md
+     da <- getA
      let res  = da - d
          zf = res == 0
          cf = da < d
@@ -417,17 +403,13 @@ cpA_ d =
 --
 
 cp_a_r8 :: R8 -> GB ()
-cp_a_r8 r =
-  do d <- getR8 r
-     cpA_ d
+cp_a_r8 = cpA_ . getR8
 
 cp_a_ihl :: GB ()
-cp_a_ihl =
-  do d <- getIHL
-     cpA_ d
+cp_a_ihl = cpA_ getIHL
      
 cp_a_d8 :: D8 -> GB ()
-cp_a_d8 = subA_
+cp_a_d8 = cpA_ . return
 
 ----
 
@@ -462,7 +444,6 @@ dec_ihl = crement (-) getIHL putIHL
 dec_r16 :: R16 -> GB ()
 dec_r16 r = crement (-) (getR16 r) (putR16 r) 
 
-
 ----
 
 
@@ -479,33 +460,29 @@ add_hl_r16 r =
   where
     low x = x .&. 0x0fff
 
---
-
 add_sp_s8 :: D8 -> GB ()
 add_sp_s8 s =
   do sp <- getSP
      let d = num (0x7f .&. s)
      if testBit s 7
         then do let res = sp - d
-                    hf = (sp .&. 0x000f) < d
+                    hf = low sp < d
                     cf = res > sp
                 putFlags False False hf cf
                 putSP res 
         else do let res = sp + d
-                    hf = testBit ((sp .&. 0x000f) + d) 4
+                    hf = testBit (low sp + d) 4
                     cf = res < sp || res < d
                 putFlags False False hf cf
                 putSP res 
-
---
-
+  where low = (.&. 0x000f)
 
 daa :: GB ()
 daa =
   do da <- getA
      let d0 =  (da `mod` 100) `div` 10
          d1 = da `mod` 10
-         d = shiftL d0 4 + d1
+         d = (shiftL d0 4) + d1
      putA d
 
 cpl :: GB ()
@@ -545,20 +522,20 @@ ei = return () -- todo
 ----
 
 
-rotateCarry_ :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
-rotateCarry_ md p shft test =
+mvBitsCarry :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
+mvBitsCarry md p mv test =
   do d <- md
-     let res = shft d 1
+     let res = mv d 1
          zf = res == 0
          cf = testBit d test
      putFlags zf False False cf
      p res
 
-rotate_ :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
-rotate_ md p shft test =
+mvBits :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
+mvBits md p mv test =
   do d <- md
      cb <- fromBool <$> getCF
-     let res = (shft d 1) + cb
+     let res = (mv d 1) + cb
          zf = res == 0
          cf = testBit d test
      putFlags zf False False cf
@@ -567,39 +544,38 @@ rotate_ md p shft test =
 --
 
 rlca :: GB ()
-rlca = rotateCarry_ getA putA shiftL 7
+rlca = mvBitsCarry getA putA rotateL 7
 
 rla :: GB ()
-rla = rotate_ getA putA shiftL 7
+rla = mvBits getA putA rotateL 7
 
 rrca :: GB ()
-rrca = rotateCarry_ getA putA shiftR 0
+rrca = mvBitsCarry getA putA rotateR 0
 
 rra :: GB ()
-rra = rotate_ getA putA shiftR 0
+rra = mvBits getA putA rotateR 0
 
 rlc_r8 :: R8 -> GB ()
-rlc_r8 r = rotateCarry_ (getR8 r) (putR8 r) shiftL 7
+rlc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateL 7
 
 rlc_ihl :: GB ()
-rlc_ihl = rotateCarry_ getIHL putIHL shiftL 7
+rlc_ihl = mvBitsCarry getIHL putIHL rotateL 7
 
 rl_r8 :: R8 -> GB ()
-rl_r8 r = rotate_ (getR8 r) (putR8 r) shiftL 7
+rl_r8 r = mvBits (getR8 r) (putR8 r) rotateL 7
 
 rl_ihl :: R8 -> GB ()
-rl_ihl r = rotate_ getIHL putIHL shiftL 7
+rl_ihl r = mvBits getIHL putIHL rotateL 7
 
 rrc_r8 :: R8 -> GB ()
-rrc_r8 r = rotateCarry_ (getR8 r) (putR8 r) shiftR 0
+rrc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateR 0
 
 rrc_ihl :: GB ()
-rrc_ihl = rotateCarry_ getIHL putIHL shiftR 0
+rrc_ihl = mvBitsCarry getIHL putIHL rotateR 0
 
 rr_r8 :: R8 -> GB ()
-rr_r8 r = rotate_ (getR8 r) (putR8 r) shiftR 0
+rr_r8 r = mvBits (getR8 r) (putR8 r) rotateR 0
 
 rr_ihl :: R8 -> GB ()
-rr_ihl r = rotate_ getIHL putIHL shiftR 0
+rr_ihl r = mvBits getIHL putIHL rotateR 0
 
-----

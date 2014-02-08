@@ -125,6 +125,8 @@ data Inst
   | ADD_sp_s8
   | INC_r16
   | DEC_r16
+  | SWAP_r8
+  | SWAP_ihl
   | DAA
   | CPL
   | CCF
@@ -150,8 +152,6 @@ data Inst
   | SLA_ihl
   | SRA_r8
   | SRA_ihl
-  | SWAP_r8
-  | SWAP_ihl
   | SRL_r8
   | SRL_ihl
   | BIT_d3_r8
