@@ -1,14 +1,6 @@
 module GammaBoy.Instruction where
 
-import Control.Monad.State.Strict
-import Control.Applicative
-import Data.Array.IO
-import Data.IORef
-import Data.Word
-import Data.Word.Odd (Word3)
-import Data.ByteString
-import Data.Bits
-import Foreign.Marshal.Utils (fromBool)
+import GammaBoy.Imports
 import GammaBoy.Types
 import GammaBoy.Util
 
@@ -91,6 +83,8 @@ cycles inst = case inst of
   RR_ihl      -> 16
   SLA_r8      -> 8
   SLA_ihl     -> 16
+  SRA_r8      -> 8
+  SRA_ihl     -> 16
   SWAP_r8     -> 8
   SWAP_ihl    -> 16
   SRL_r8      -> 8
@@ -103,6 +97,9 @@ cycles inst = case inst of
   SET_d3_ihl  -> 16
   JP_a16      -> 16
   JP_cc_a16   -> 12
+  JP_ihl      -> 4
+  JR_a8       -> 8
+  JR_cc_a8    -> 8
   CALL_a16    -> 12
   CALL_cc_a16 -> 12
   RST_ra      -> 16
@@ -118,6 +115,107 @@ cyclesFromCCSuccess inst = case inst of
   CALL_cc_a16 -> 12
   RET_cc      -> 12
   _ -> 0
+
+bytes :: (Integral a) => Inst -> a
+bytes inst = case inst of
+  LD_r8_r8    -> 1
+  LD_r8_ihl   -> 1
+  LD_ihl_r8   -> 1
+  LD_ihl_d8   -> 2
+  LD_a_idr    -> 1
+  LD_a_a16    -> 3
+  LD_a_d8     -> 1
+  LD_idr_a    -> 1
+  LD_a16_a    -> 3
+  LD_a_idr_c  -> 2
+  LD_idr_c_a  -> 2
+  LDH_a8_a    -> 2
+  LDH_a_a8    -> 2
+  LD_r16_d16  -> 3
+  LD_sp_hl    -> 2
+  LDHL_sp_s8  -> 2
+  LD_a16_sp   -> 3
+  PUSH_r16    -> 1
+  POP_r16     -> 1
+  ADD_a_r8    -> 1
+  ADD_a_ihl   -> 1
+  ADD_a_d8    -> 1
+  ADC_a_r8    -> 1
+  ADC_a_ihl   -> 1
+  ADC_a_d8    -> 2
+  SUB_a_r8    -> 1
+  SUB_a_ihl   -> 1
+  SUB_a_d8    -> 2
+  SBC_a_r8    -> 1
+  SBC_a_ihl   -> 1
+  SBC_a_d8    -> 2
+  AND_a_r8    -> 1
+  AND_a_ihl   -> 1
+  AND_a_d8    -> 2
+  XOR_a_r8    -> 1
+  XOR_a_ihl   -> 1
+  XOR_a_d8    -> 2
+  OR_a_r8     -> 1
+  OR_a_ihl    -> 1
+  OR_a_d8     -> 2
+  CP_a_r8     -> 1
+  CP_a_ihl    -> 1
+  CP_a_d8     -> 1
+  INC_r8      -> 1
+  INC_ihl     -> 1
+  DEC_r8      -> 1
+  DEC_ihl     -> 1
+  ADD_hl_r16  -> 1
+  ADD_sp_s8   -> 1
+  INC_r16     -> 1
+  DEC_r16     -> 1
+  DAA         -> 1
+  CPL         -> 1
+  CCF         -> 1
+  SCF         -> 1
+  NOP         -> 1
+  HALT        -> 1
+  STOP        -> 1
+  DI          -> 1
+  EI          -> 1
+  RLCA        -> 1
+  RLA         -> 1
+  RRCA        -> 1
+  RRA         -> 1
+  RLC_r8      -> 2
+  RLC_ihl     -> 2
+  RRC_r8      -> 2
+  RRC_ihl     -> 2
+  RL_r8       -> 2
+  RL_ihl      -> 2
+  RR_r8       -> 2
+  RR_ihl      -> 2
+  SLA_r8      -> 2
+  SLA_ihl     -> 2
+  SRA_r8      -> 2
+  SRA_ihl     -> 2
+  SWAP_r8     -> 2
+  SWAP_ihl    -> 2
+  SRL_r8      -> 2
+  SRL_ihl     -> 2
+  BIT_d3_r8   -> 2
+  BIT_d3_ihl  -> 2
+  RES_d3_r8   -> 2
+  RES_d3_ihl  -> 2
+  SET_d3_r8   -> 2
+  SET_d3_ihl  -> 2
+  JP_a16      -> 3
+  JP_cc_a16   -> 3
+  JP_ihl      -> 1
+  JR_a8       -> 2
+  JR_cc_a8    -> 2
+  CALL_a16    -> 3
+  CALL_cc_a16 -> 3
+  RST_ra      -> 1
+  RET         -> 1
+  RET_cc      -> 1
+  RETI        -> 1
+  PREFIX_CB   -> 1
 
 ----
 
@@ -523,8 +621,8 @@ rlc_ihl = mvBitsCarry getIHL putIHL rotateL 7
 rl_r8 :: R8 -> GB ()
 rl_r8 r = mvBits (getR8 r) (putR8 r) rotateL 7
 
-rl_ihl :: R8 -> GB ()
-rl_ihl r = mvBits getIHL putIHL rotateL 7
+rl_ihl :: GB ()
+rl_ihl = mvBits getIHL putIHL rotateL 7
 
 rrc_r8 :: R8 -> GB ()
 rrc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateR 0
@@ -535,8 +633,8 @@ rrc_ihl = mvBitsCarry getIHL putIHL rotateR 0
 rr_r8 :: R8 -> GB ()
 rr_r8 r = mvBits (getR8 r) (putR8 r) rotateR 0
 
-rr_ihl :: R8 -> GB ()
-rr_ihl r = mvBits getIHL putIHL rotateR 0
+rr_ihl :: GB ()
+rr_ihl = mvBits getIHL putIHL rotateR 0
 
 sla_r8 :: R8 -> GB ()
 sla_r8 r = mvBits (getR8 r) (putR8 r) shiftL 7

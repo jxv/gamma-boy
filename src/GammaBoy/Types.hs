@@ -1,20 +1,15 @@
 module GammaBoy.Types where
 
-import Control.Monad.State.Strict
-import Data.Array.IO
-import Data.IORef
-import Data.Word
-import Data.Int
-import Data.Word.Odd (Word3)
-import Data.ByteString
+import           Control.Monad.State.Strict (StateT(..))
+import           Data.Array.IO              (IOArray, IOUArray)
+import           Data.Word                  (Word8, Word16)
+import           Data.Word.Odd              (Word3)
 
 type D3 = Word3
 type A8 = Word8
 type D8 = Word8
-type S8 = Int8
 type A16 = Word16
 type D16 = Word16
-type S16 = Int16
 type Opcode = Word8
 
 type GB a = StateT Mem IO a
