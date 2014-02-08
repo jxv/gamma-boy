@@ -545,12 +545,8 @@ ei = return () -- todo
 ----
 
 
-rotateCarry_ :: GB D8 
-             -> (D8 -> Int -> D8)
-             -> (D8 -> GB ())
-             -> Int
-             -> GB ()
-rotateCarry_ md shft p test =
+rotateCarry_ :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
+rotateCarry_ md p shft test =
   do d <- md
      let res = shft d 1
          zf = res == 0
@@ -558,12 +554,8 @@ rotateCarry_ md shft p test =
      putFlags zf False False cf
      p res
 
-rotate_ :: GB D8
-        -> (D8 -> Int -> D8)
-        -> (D8 -> GB())
-        -> Int
-        -> GB ()
-rotate_ md shft p test =
+rotate_ :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
+rotate_ md p shft test =
   do d <- md
      cb <- fromBool <$> getCF
      let res = (shft d 1) + cb
@@ -575,38 +567,39 @@ rotate_ md shft p test =
 --
 
 rlca :: GB ()
-rlca = rotateCarry_ getA shiftL putA 7
+rlca = rotateCarry_ getA putA shiftL 7
 
 rla :: GB ()
-rla = rotate_ getA shiftL putA 7
+rla = rotate_ getA putA shiftL 7
 
 rrca :: GB ()
-rrca = rotateCarry_ getA shiftR putA 0
+rrca = rotateCarry_ getA putA shiftR 0
 
 rra :: GB ()
-rra = rotate_ getA shiftR putA 0
+rra = rotate_ getA putA shiftR 0
 
 rlc_r8 :: R8 -> GB ()
-rlc_r8 r = rotateCarry_ (getR8 r) shiftL (putR8 r) 7
+rlc_r8 r = rotateCarry_ (getR8 r) (putR8 r) shiftL 7
 
 rlc_ihl :: GB ()
-rlc_ihl = rotateCarry_ getIHL shiftL putIHL 7
+rlc_ihl = rotateCarry_ getIHL putIHL shiftL 7
 
 rl_r8 :: R8 -> GB ()
-rl_r8 r = rotate_ (getR8 r) shiftL (putR8 r) 7
+rl_r8 r = rotate_ (getR8 r) (putR8 r) shiftL 7
 
 rl_ihl :: R8 -> GB ()
-rl_ihl r = rotate_ getIHL shiftL putIHL 7
+rl_ihl r = rotate_ getIHL putIHL shiftL 7
 
 rrc_r8 :: R8 -> GB ()
-rrc_r8 r = rotateCarry_ (getR8 r) shiftR (putR8 r) 0
+rrc_r8 r = rotateCarry_ (getR8 r) (putR8 r) shiftR 0
 
 rrc_ihl :: GB ()
-rrc_ihl = rotateCarry_ getIHL shiftR putIHL 0
+rrc_ihl = rotateCarry_ getIHL putIHL shiftR 0
 
 rr_r8 :: R8 -> GB ()
-rr_r8 r = rotate_ (getR8 r) shiftR (putR8 r) 0
+rr_r8 r = rotate_ (getR8 r) (putR8 r) shiftR 0
 
 rr_ihl :: R8 -> GB ()
-rr_ihl r = rotate_ getIHL shiftR putIHL 0
+rr_ihl r = rotate_ getIHL putIHL shiftR 0
 
+----
