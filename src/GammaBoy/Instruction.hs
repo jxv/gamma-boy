@@ -674,4 +674,50 @@ bit_d3_r8 d r = bitD3 (getR8 r) (putR8 r) d
 bit_d3_ihl :: D3 -> GB ()
 bit_d3_ihl = bitD3 getIHL putIHL
 
+----
+
+
+defBit :: (D8 -> Int -> D8) -> GB D8 -> (D8 -> GB ()) -> D3 -> GB ()
+defBit f md p n =
+  do d <- md
+     p (f d (num n))
+
+--
+
+set_r8 :: R8 -> D3 -> GB ()
+set_r8 r = defBit setBit (getR8 r) (putR8 r) 
+
+set_ihl :: D3 -> GB ()
+set_ihl = defBit setBit getIHL putIHL
+
+res_r8 :: R8 -> D3 -> GB ()
+res_r8 r = defBit clearBit (getR8 r) (putR8 r) 
+
+res_ihl :: D3 -> GB ()
+res_ihl = defBit clearBit getIHL putIHL
+
+----
+
+jp_a16 :: A16 -> GB ()
+jp_a16 = putPC . (subtract (bytes JP_a16))
+
+jp_cc_a16 :: CC -> A16 -> GB ()
+jp_cc_a16 cc a =
+  do zf <- getZF
+     cf <- getCF
+     let cond = case cc of
+          CC_Z  -> zf
+          CC_NZ -> zf
+          CC_C  -> cf
+          CC_NC -> cf
+     putPC (if cond
+               then a - (bytes JP_cc_a16)
+               else 0)
+
+jp_ihl :: GB ()
+jp_ihl = 
+  do a <- getHL
+     putPC (a - (bytes JP_ihl))
+
+
 

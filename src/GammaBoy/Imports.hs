@@ -29,6 +29,8 @@ import           Data.Bits                  as Imports ((.|.),
                                                         rotateR,
                                                         testBit,
                                                         complement,
+                                                        setBit,
+                                                        clearBit,
                                                         bit,
                                                         Bits)
 
