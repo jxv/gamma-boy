@@ -12,17 +12,17 @@ cycles inst = case inst of
   LD_r8_r8    -> 4
   LD_r8_ihl   -> 8
   LD_ihl_r8   -> 8
-  LD_ihl_d8   -> 8
+  LD_ihl_u8   -> 8
   LD_a_idr    -> 8
   LD_a_a16    -> 16
-  LD_a_d8     -> 8
+  LD_a_u8     -> 8
   LD_idr_a    -> 8
   LD_a16_a    -> 8
   LD_a_idr_c  -> 8
   LD_idr_c_a  -> 8
   LDH_a8_a    -> 12
   LDH_a_a8    -> 12
-  LD_r16_d16  -> 12
+  LD_r16_u16  -> 12
   LD_sp_hl    -> 8
   LDHL_sp_s8  -> 12
   LD_a16_sp   -> 20
@@ -30,28 +30,28 @@ cycles inst = case inst of
   POP_r16     -> 12
   ADD_a_r8    -> 4
   ADD_a_ihl   -> 8
-  ADD_a_d8    -> 8
+  ADD_a_u8    -> 8
   ADC_a_r8    -> 4
   ADC_a_ihl   -> 8
-  ADC_a_d8    -> 8
+  ADC_a_u8    -> 8
   SUB_a_r8    -> 4
   SUB_a_ihl   -> 8
-  SUB_a_d8    -> 8
+  SUB_a_u8    -> 8
   SBC_a_r8    -> 4
   SBC_a_ihl   -> 8
-  SBC_a_d8    -> 8
+  SBC_a_u8    -> 8
   AND_a_r8    -> 4
   AND_a_ihl   -> 8
-  AND_a_d8    -> 8
+  AND_a_u8    -> 8
   XOR_a_r8    -> 4
   XOR_a_ihl   -> 8
-  XOR_a_d8    -> 8
+  XOR_a_u8    -> 8
   OR_a_r8     -> 4
   OR_a_ihl    -> 8
-  OR_a_d8     -> 8
+  OR_a_u8     -> 8
   CP_a_r8     -> 4
   CP_a_ihl    -> 8
-  CP_a_d8     -> 8
+  CP_a_u8     -> 8
   INC_r8      -> 4
   INC_ihl     -> 12
   DEC_r8      -> 4
@@ -89,20 +89,20 @@ cycles inst = case inst of
   SWAP_ihl    -> 16
   SRL_r8      -> 8
   SRL_ihl     -> 16
-  BIT_d3_r8   -> 8
-  BIT_d3_ihl  -> 16
-  RES_d3_r8   -> 8
-  RES_d3_ihl  -> 16
-  SET_d3_r8   -> 8
-  SET_d3_ihl  -> 16
+  BIT_u3_r8   -> 8
+  BIT_u3_ihl  -> 16
+  RES_u3_r8   -> 8
+  RES_u3_ihl  -> 16
+  SET_u3_r8   -> 8
+  SET_u3_ihl  -> 16
   JP_a16      -> 16
   JP_cc_a16   -> 12
   JP_ihl      -> 4
-  JR_a8       -> 8
-  JR_cc_a8    -> 8
+  JR_s8       -> 8
+  JR_cc_s8    -> 8
   CALL_a16    -> 12
   CALL_cc_a16 -> 12
-  RST_ra      -> 16
+  RST_a16     -> 16
   RET         -> 16
   RET_cc      -> 8
   RETI        -> 8
@@ -111,7 +111,7 @@ cycles inst = case inst of
 cyclesFromCCSuccess :: (Integral a) => Inst -> a
 cyclesFromCCSuccess inst = case inst of
   JP_cc_a16   -> 4
-  JR_cc_a8    -> 4
+  JR_cc_s8    -> 4
   CALL_cc_a16 -> 12
   RET_cc      -> 12
   _ -> 0
@@ -121,17 +121,17 @@ bytes inst = case inst of
   LD_r8_r8    -> 1
   LD_r8_ihl   -> 1
   LD_ihl_r8   -> 1
-  LD_ihl_d8   -> 2
+  LD_ihl_u8   -> 2
   LD_a_idr    -> 1
   LD_a_a16    -> 3
-  LD_a_d8     -> 1
+  LD_a_u8     -> 1
   LD_idr_a    -> 1
   LD_a16_a    -> 3
   LD_a_idr_c  -> 2
   LD_idr_c_a  -> 2
   LDH_a8_a    -> 2
   LDH_a_a8    -> 2
-  LD_r16_d16  -> 3
+  LD_r16_u16  -> 3
   LD_sp_hl    -> 2
   LDHL_sp_s8  -> 2
   LD_a16_sp   -> 3
@@ -139,28 +139,28 @@ bytes inst = case inst of
   POP_r16     -> 1
   ADD_a_r8    -> 1
   ADD_a_ihl   -> 1
-  ADD_a_d8    -> 1
+  ADD_a_u8    -> 1
   ADC_a_r8    -> 1
   ADC_a_ihl   -> 1
-  ADC_a_d8    -> 2
+  ADC_a_u8    -> 2
   SUB_a_r8    -> 1
   SUB_a_ihl   -> 1
-  SUB_a_d8    -> 2
+  SUB_a_u8    -> 2
   SBC_a_r8    -> 1
   SBC_a_ihl   -> 1
-  SBC_a_d8    -> 2
+  SBC_a_u8    -> 2
   AND_a_r8    -> 1
   AND_a_ihl   -> 1
-  AND_a_d8    -> 2
+  AND_a_u8    -> 2
   XOR_a_r8    -> 1
   XOR_a_ihl   -> 1
-  XOR_a_d8    -> 2
+  XOR_a_u8    -> 2
   OR_a_r8     -> 1
   OR_a_ihl    -> 1
-  OR_a_d8     -> 2
+  OR_a_u8     -> 2
   CP_a_r8     -> 1
   CP_a_ihl    -> 1
-  CP_a_d8     -> 1
+  CP_a_u8     -> 1
   INC_r8      -> 1
   INC_ihl     -> 1
   DEC_r8      -> 1
@@ -198,20 +198,20 @@ bytes inst = case inst of
   SWAP_ihl    -> 2
   SRL_r8      -> 2
   SRL_ihl     -> 2
-  BIT_d3_r8   -> 2
-  BIT_d3_ihl  -> 2
-  RES_d3_r8   -> 2
-  RES_d3_ihl  -> 2
-  SET_d3_r8   -> 2
-  SET_d3_ihl  -> 2
+  BIT_u3_r8   -> 2
+  BIT_u3_ihl  -> 2
+  RES_u3_r8   -> 2
+  RES_u3_ihl  -> 2
+  SET_u3_r8   -> 2
+  SET_u3_ihl  -> 2
   JP_a16      -> 3
   JP_cc_a16   -> 3
   JP_ihl      -> 1
-  JR_a8       -> 2
-  JR_cc_a8    -> 2
+  JR_s8       -> 2
+  JR_cc_s8    -> 2
   CALL_a16    -> 3
   CALL_cc_a16 -> 3
-  RST_ra      -> 1
+  RST_a16     -> 1
   RET         -> 1
   RET_cc      -> 1
   RETI        -> 1
@@ -240,8 +240,8 @@ ld_r8_ihl r = putR8 r =<< getIHL
 ld_ihl_r8 :: R8 -> GB ()
 ld_ihl_r8 r = putIHL =<< getR8 r
 
-ld_ihl_d8 :: D8 -> GB ()
-ld_ihl_d8 = putIHL 
+ld_ihl_u8 :: U8 -> GB ()
+ld_ihl_u8 = putIHL 
 
 ld_a_idr :: R16 -> GB ()
 ld_a_idr r = putAFromRam8 =<< getR16 r
@@ -249,8 +249,8 @@ ld_a_idr r = putAFromRam8 =<< getR16 r
 ld_a_a16 :: A16 -> GB ()
 ld_a_a16 = putAFromRam8
 
-ld_a_d8 :: D8 -> GB ()
-ld_a_d8 = putA
+ld_a_u8 :: U8 -> GB ()
+ld_a_u8 = putA
 
 ld_idr_a :: R16 -> GB ()
 ld_idr_a r = putRam8FromA =<< getR16 r
@@ -267,13 +267,13 @@ ld_idr_c_a = putRam8FromA . offsetFF00h =<< getC
 ldh_a8_a :: A8 -> GB ()
 ldh_a8_a a = putRam8FromA (offsetFF00h a)
 
-ld_r16_d16 :: R16 -> D16 -> GB ()
-ld_r16_d16 = putR16
+ld_r16_u16 :: R16 -> U16 -> GB ()
+ld_r16_u16 = putR16
 
 ld_sp_hl :: GB ()
 ld_sp_hl = putSP =<< getHL
 
-ldhl_sp_s8 :: D8 -> GB ()
+ldhl_sp_s8 :: U8 -> GB ()
 ldhl_sp_s8 s =
   do sp <- getSP
      let d = num (0x7f .&. s)
@@ -308,7 +308,7 @@ pop_r16 r =
 ----
 
 
-addA_ :: GB D8 -> GB ()
+addA_ :: GB U8 -> GB ()
 addA_ md =
   do d <- md
      da <- getA
@@ -320,7 +320,7 @@ addA_ md =
      putA res
    where low = (.&. 0x0f)
 
-adcA_ :: GB D8 -> GB ()
+adcA_ :: GB U8 -> GB ()
 adcA_ md =
   do d <- md
      da <- getA
@@ -341,8 +341,8 @@ add_a_r8 = addA_ . getR8
 add_a_ihl :: GB ()
 add_a_ihl = addA_ getIHL
 
-add_a_d8 :: D8 -> GB ()
-add_a_d8 = addA_ . return
+add_a_u8 :: U8 -> GB ()
+add_a_u8 = addA_ . return
 
 adc_a_r8 :: R8 -> GB ()
 adc_a_r8 = adcA_ . getR8
@@ -350,13 +350,13 @@ adc_a_r8 = adcA_ . getR8
 adc_a_ihl :: GB ()
 adc_a_ihl = adcA_ getIHL
      
-adc_a_d8 :: D8 -> GB ()
-adc_a_d8 = adcA_ . return
+adc_a_u8 :: U8 -> GB ()
+adc_a_u8 = adcA_ . return
 
 ----
 
 
-subA_ :: GB D8 -> GB ()
+subA_ :: GB U8 -> GB ()
 subA_ md =
   do d <- md
      da <- getA
@@ -368,7 +368,7 @@ subA_ md =
      putA res
    where low = (.&. 0x0f)
 
-sbcA_ :: GB D8 -> GB ()
+sbcA_ :: GB U8 -> GB ()
 sbcA_ md =
   do d <- md
      da <- getA
@@ -389,8 +389,8 @@ sub_a_r8 = subA_ . getR8
 sub_a_ihl :: GB ()
 sub_a_ihl = subA_ getIHL
      
-sub_a_d8 :: D8 -> GB ()
-sub_a_d8 = subA_ . return
+sub_a_u8 :: U8 -> GB ()
+sub_a_u8 = subA_ . return
 
 sbc_a_r8 :: R8 -> GB ()
 sbc_a_r8 = sbcA_ . getR8
@@ -398,13 +398,13 @@ sbc_a_r8 = sbcA_ . getR8
 sbc_a_ihl :: GB ()
 sbc_a_ihl = sbcA_ getIHL
 
-sbc_a_d8 :: D8 -> GB ()
-sbc_a_d8 = sbcA_ . return
+sbc_a_u8 :: U8 -> GB ()
+sbc_a_u8 = sbcA_ . return
 
 ----
 
 
-bitOpA_ :: (D8 -> D8 -> D8) -> GB D8 -> GB ()
+bitOpA_ :: (U8 -> U8 -> U8) -> GB U8 -> GB ()
 bitOpA_ f md =
   do d <- md
      k <- getA
@@ -422,8 +422,8 @@ and_a_r8 = bitOpA_ (.&.) . getR8
 and_a_ihl :: GB ()
 and_a_ihl = bitOpA_ (.&.) getIHL
 
-and_a_d8 :: D8 -> GB ()
-and_a_d8 = bitOpA_ (.&.) . return
+and_a_u8 :: U8 -> GB ()
+and_a_u8 = bitOpA_ (.&.) . return
 
 xor_a_r8 :: R8 -> GB ()
 xor_a_r8 = bitOpA_ xor . getR8
@@ -431,8 +431,8 @@ xor_a_r8 = bitOpA_ xor . getR8
 xor_a_ihl :: GB ()
 xor_a_ihl = bitOpA_ xor getIHL
 
-xor_a_d8 :: D8 -> GB ()
-xor_a_d8 = bitOpA_ xor. return
+xor_a_u8 :: U8 -> GB ()
+xor_a_u8 = bitOpA_ xor. return
 
 or_a_r8 :: R8 -> GB ()
 or_a_r8 = bitOpA_ (.|.) . getR8
@@ -440,13 +440,13 @@ or_a_r8 = bitOpA_ (.|.) . getR8
 or_a_ihl :: GB ()
 or_a_ihl = bitOpA_ (.|.) getIHL
 
-or_a_d8 :: D8 -> GB ()
-or_a_d8 = bitOpA_ (.|.) . return
+or_a_u8 :: U8 -> GB ()
+or_a_u8 = bitOpA_ (.|.) . return
 
 ----
 
 
-cpA_ :: GB D8 -> GB ()
+cpA_ :: GB U8 -> GB ()
 cpA_ md =
   do d <- md
      da <- getA
@@ -465,8 +465,8 @@ cp_a_r8 = cpA_ . getR8
 cp_a_ihl :: GB ()
 cp_a_ihl = cpA_ getIHL
      
-cp_a_d8 :: D8 -> GB ()
-cp_a_d8 = cpA_ . return
+cp_a_u8 :: U8 -> GB ()
+cp_a_u8 = cpA_ . return
 
 ----
 
@@ -517,7 +517,7 @@ add_hl_r16 r =
   where
     low = (.&. 0x0fff)
 
-add_sp_s8 :: D8 -> GB ()
+add_sp_s8 :: U8 -> GB ()
 add_sp_s8 s =
   do sp <- getSP
      let d = num (0x7f .&. s)
@@ -579,7 +579,7 @@ ei = return () -- todo
 ----
 
 
-mvBitsCarry :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
+mvBitsCarry :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> GB ()
 mvBitsCarry md p mv test =
   do d <- md
      let res = mv d 1
@@ -588,7 +588,7 @@ mvBitsCarry md p mv test =
      putFlags zf False False cf
      p res
 
-mvBits :: GB D8 -> (D8 -> GB ()) -> (D8 -> Int -> D8) -> Int -> GB ()
+mvBits :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> GB ()
 mvBits md p mv test =
   do d <- md
      cb <- fromBool <$> getCF
@@ -657,7 +657,7 @@ srl_ihl = mvBits getIHL putIHL shiftR 0
 ----
 
 
-bitD3 :: GB D8 -> (D8 -> GB ()) -> D3 -> GB ()
+bitD3 :: GB U8 -> (U8 -> GB ()) -> U3 -> GB ()
 bitD3 g p d3 =
   do d8 <- g
      cf <- getCF
@@ -668,38 +668,38 @@ bitD3 g p d3 =
 
 --
 
-bit_d3_r8 :: D3 -> R8 -> GB ()
-bit_d3_r8 d r = bitD3 (getR8 r) (putR8 r) d
+bit_u3_r8 :: U3 -> R8 -> GB ()
+bit_u3_r8 d r = bitD3 (getR8 r) (putR8 r) d
 
-bit_d3_ihl :: D3 -> GB ()
-bit_d3_ihl = bitD3 getIHL putIHL
+bit_u3_ihl :: U3 -> GB ()
+bit_u3_ihl = bitD3 getIHL putIHL
 
 ----
 
 
-defBit :: (D8 -> Int -> D8) -> GB D8 -> (D8 -> GB ()) -> D3 -> GB ()
+defBit :: (U8 -> Int -> U8) -> GB U8 -> (U8 -> GB ()) -> U3 -> GB ()
 defBit f md p n =
   do d <- md
      p (f d (num n))
 
 --
 
-set_r8 :: R8 -> D3 -> GB ()
+set_r8 :: R8 -> U3 -> GB ()
 set_r8 r = defBit setBit (getR8 r) (putR8 r) 
 
-set_ihl :: D3 -> GB ()
+set_ihl :: U3 -> GB ()
 set_ihl = defBit setBit getIHL putIHL
 
-res_r8 :: R8 -> D3 -> GB ()
+res_r8 :: R8 -> U3 -> GB ()
 res_r8 r = defBit clearBit (getR8 r) (putR8 r) 
 
-res_ihl :: D3 -> GB ()
+res_ihl :: U3 -> GB ()
 res_ihl = defBit clearBit getIHL putIHL
 
 ----
 
 jp_a16 :: A16 -> GB ()
-jp_a16 = putPC . (subtract (bytes JP_a16))
+jp_a16 = putPC
 
 jp_cc_a16 :: CC -> A16 -> GB ()
 jp_cc_a16 cc a =
@@ -710,14 +710,85 @@ jp_cc_a16 cc a =
           CC_NZ -> zf
           CC_C  -> cf
           CC_NC -> cf
-     putPC (if cond
-               then a - (bytes JP_cc_a16)
-               else 0)
+     if cond
+        then putPC a
+        else incPC (bytes JP_cc_a16)
+ 
 
 jp_ihl :: GB ()
-jp_ihl = 
-  do a <- getHL
-     putPC (a - (bytes JP_ihl))
+jp_ihl = putPC =<< getHL
 
+--
+
+jr_s8 :: S8 -> GB ()
+jr_s8 a =
+  do pc <- getPC
+     let a' = num a :: S16
+         pc' = num pc :: S16
+     putPC (num $ pc' + a')
+
+jr_cc_s8 :: CC -> S8 -> GB ()
+jr_cc_s8 cc a =
+  do zf <- getZF
+     cf <- getCF
+     pc <- getPC
+     let a' = num a :: S16
+         pc' = num pc :: S16
+         cond = case cc of
+           CC_Z  -> zf
+           CC_NZ -> zf
+           CC_C  -> cf
+           CC_NC -> cf
+     if cond
+        then putPC (num $ pc' + a')
+        else incPC (bytes JR_cc_s8)
+
+----
+
+callA :: A16 -> GB ()
+callA a =
+  do pc <- getPC
+     putISP (pc + 2)
+     decSP 2
+     putPC a
+
+--
+
+call_a16 :: A16 -> GB ()
+call_a16 = callA
+
+call_cc_a16 :: CC -> A16 -> GB ()
+call_cc_a16 cc a =
+  do zf <- getZF
+     cf <- getCF
+     let cond = case cc of
+           CC_Z  -> zf
+           CC_NZ -> zf
+           CC_C  -> cf
+           CC_NC -> cf
+     if cond
+        then callA a
+        else decPC 2
+
+--
+
+rst_a16 :: A16 -> GB ()
+rst_a16 a =
+  do pc <- getPC
+     putISP pc
+     decSP 2
+     putPC a
+
+ret :: GB ()
+ret =
+  do pc <- getISP
+     putPC pc
+     incSP 2
+
+reti :: GB ()
+reti =
+  do pc <- getISP
+     incSP 2
+     ei
 
 
