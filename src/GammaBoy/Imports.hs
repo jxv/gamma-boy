@@ -13,7 +13,7 @@ import           Data.Array.IO              as Imports (IOArray,
                                                         IOUArray,
                                                         writeArray,
                                                         readArray)
-import           Data.IORef                 as Imports (IORef)
+import           Data.IORef                 as Imports (IORef, readIORef, writeIORef)
 import           Data.Word                  as Imports (Word8,
                                                         Word16)
 import           Data.Int                   as Imports (Int8,

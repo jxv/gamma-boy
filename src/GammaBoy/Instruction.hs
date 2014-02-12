@@ -7,219 +7,6 @@ import GammaBoy.Util
 ----
 
 
-cycles :: (Integral a) => Inst -> a
-cycles inst = case inst of
-  LD_r8_r8    -> 4
-  LD_r8_ihl   -> 8
-  LD_ihl_r8   -> 8
-  LD_ihl_u8   -> 8
-  LD_a_idr    -> 8
-  LD_a_a16    -> 16
-  LD_a_u8     -> 8
-  LD_idr_a    -> 8
-  LD_a16_a    -> 8
-  LD_a_idr_c  -> 8
-  LD_idr_c_a  -> 8
-  LDH_a8_a    -> 12
-  LDH_a_a8    -> 12
-  LD_r16_u16  -> 12
-  LD_sp_hl    -> 8
-  LDHL_sp_s8  -> 12
-  LD_a16_sp   -> 20
-  PUSH_r16    -> 16
-  POP_r16     -> 12
-  ADD_a_r8    -> 4
-  ADD_a_ihl   -> 8
-  ADD_a_u8    -> 8
-  ADC_a_r8    -> 4
-  ADC_a_ihl   -> 8
-  ADC_a_u8    -> 8
-  SUB_a_r8    -> 4
-  SUB_a_ihl   -> 8
-  SUB_a_u8    -> 8
-  SBC_a_r8    -> 4
-  SBC_a_ihl   -> 8
-  SBC_a_u8    -> 8
-  AND_a_r8    -> 4
-  AND_a_ihl   -> 8
-  AND_a_u8    -> 8
-  XOR_a_r8    -> 4
-  XOR_a_ihl   -> 8
-  XOR_a_u8    -> 8
-  OR_a_r8     -> 4
-  OR_a_ihl    -> 8
-  OR_a_u8     -> 8
-  CP_a_r8     -> 4
-  CP_a_ihl    -> 8
-  CP_a_u8     -> 8
-  INC_r8      -> 4
-  INC_ihl     -> 12
-  DEC_r8      -> 4
-  DEC_ihl     -> 12
-  ADD_hl_r16  -> 8
-  ADD_sp_s8   -> 16
-  INC_r16     -> 8
-  DEC_r16     -> 8
-  DAA         -> 4
-  CPL         -> 4
-  CCF         -> 4
-  SCF         -> 4
-  NOP         -> 4
-  HALT        -> 4
-  STOP        -> 4
-  DI          -> 4
-  EI          -> 4
-  RLCA        -> 4
-  RLA         -> 4
-  RRCA        -> 4
-  RRA         -> 4
-  RLC_r8      -> 8
-  RLC_ihl     -> 16
-  RRC_r8      -> 8
-  RRC_ihl     -> 16
-  RL_r8       -> 8
-  RL_ihl      -> 16
-  RR_r8       -> 8
-  RR_ihl      -> 16
-  SLA_r8      -> 8
-  SLA_ihl     -> 16
-  SRA_r8      -> 8
-  SRA_ihl     -> 16
-  SWAP_r8     -> 8
-  SWAP_ihl    -> 16
-  SRL_r8      -> 8
-  SRL_ihl     -> 16
-  BIT_u3_r8   -> 8
-  BIT_u3_ihl  -> 16
-  RES_u3_r8   -> 8
-  RES_u3_ihl  -> 16
-  SET_u3_r8   -> 8
-  SET_u3_ihl  -> 16
-  JP_a16      -> 16
-  JP_cc_a16   -> 12
-  JP_ihl      -> 4
-  JR_s8       -> 8
-  JR_cc_s8    -> 8
-  CALL_a16    -> 12
-  CALL_cc_a16 -> 12
-  RST_a16     -> 16
-  RET         -> 16
-  RET_cc      -> 8
-  RETI        -> 8
-  PREFIX_CB   -> 4
-
-cyclesFromCCSuccess :: (Integral a) => Inst -> a
-cyclesFromCCSuccess inst = case inst of
-  JP_cc_a16   -> 4
-  JR_cc_s8    -> 4
-  CALL_cc_a16 -> 12
-  RET_cc      -> 12
-  _ -> 0
-
-bytes :: (Integral a) => Inst -> a
-bytes inst = case inst of
-  LD_r8_r8    -> 1
-  LD_r8_ihl   -> 1
-  LD_ihl_r8   -> 1
-  LD_ihl_u8   -> 2
-  LD_a_idr    -> 1
-  LD_a_a16    -> 3
-  LD_a_u8     -> 1
-  LD_idr_a    -> 1
-  LD_a16_a    -> 3
-  LD_a_idr_c  -> 2
-  LD_idr_c_a  -> 2
-  LDH_a8_a    -> 2
-  LDH_a_a8    -> 2
-  LD_r16_u16  -> 3
-  LD_sp_hl    -> 2
-  LDHL_sp_s8  -> 2
-  LD_a16_sp   -> 3
-  PUSH_r16    -> 1
-  POP_r16     -> 1
-  ADD_a_r8    -> 1
-  ADD_a_ihl   -> 1
-  ADD_a_u8    -> 1
-  ADC_a_r8    -> 1
-  ADC_a_ihl   -> 1
-  ADC_a_u8    -> 2
-  SUB_a_r8    -> 1
-  SUB_a_ihl   -> 1
-  SUB_a_u8    -> 2
-  SBC_a_r8    -> 1
-  SBC_a_ihl   -> 1
-  SBC_a_u8    -> 2
-  AND_a_r8    -> 1
-  AND_a_ihl   -> 1
-  AND_a_u8    -> 2
-  XOR_a_r8    -> 1
-  XOR_a_ihl   -> 1
-  XOR_a_u8    -> 2
-  OR_a_r8     -> 1
-  OR_a_ihl    -> 1
-  OR_a_u8     -> 2
-  CP_a_r8     -> 1
-  CP_a_ihl    -> 1
-  CP_a_u8     -> 1
-  INC_r8      -> 1
-  INC_ihl     -> 1
-  DEC_r8      -> 1
-  DEC_ihl     -> 1
-  ADD_hl_r16  -> 1
-  ADD_sp_s8   -> 1
-  INC_r16     -> 1
-  DEC_r16     -> 1
-  DAA         -> 1
-  CPL         -> 1
-  CCF         -> 1
-  SCF         -> 1
-  NOP         -> 1
-  HALT        -> 1
-  STOP        -> 1
-  DI          -> 1
-  EI          -> 1
-  RLCA        -> 1
-  RLA         -> 1
-  RRCA        -> 1
-  RRA         -> 1
-  RLC_r8      -> 2
-  RLC_ihl     -> 2
-  RRC_r8      -> 2
-  RRC_ihl     -> 2
-  RL_r8       -> 2
-  RL_ihl      -> 2
-  RR_r8       -> 2
-  RR_ihl      -> 2
-  SLA_r8      -> 2
-  SLA_ihl     -> 2
-  SRA_r8      -> 2
-  SRA_ihl     -> 2
-  SWAP_r8     -> 2
-  SWAP_ihl    -> 2
-  SRL_r8      -> 2
-  SRL_ihl     -> 2
-  BIT_u3_r8   -> 2
-  BIT_u3_ihl  -> 2
-  RES_u3_r8   -> 2
-  RES_u3_ihl  -> 2
-  SET_u3_r8   -> 2
-  SET_u3_ihl  -> 2
-  JP_a16      -> 3
-  JP_cc_a16   -> 3
-  JP_ihl      -> 1
-  JR_s8       -> 2
-  JR_cc_s8    -> 2
-  CALL_a16    -> 3
-  CALL_cc_a16 -> 3
-  RST_a16     -> 1
-  RET         -> 1
-  RET_cc      -> 1
-  RETI        -> 1
-  PREFIX_CB   -> 1
-
-----
-
-
 putAFromRam8 :: A16 -> GB ()
 putAFromRam8 a = putA =<< getRam8 a
 
@@ -229,55 +16,110 @@ putRam8FromA a = putRam8 a =<< getA
 offsetFF00h :: A8 -> A16
 offsetFF00h a = 0xff00 + num a
 
+----
+
+
+ld :: GB a -> (a -> GB ()) -> U16 -> S8 -> GB ()
+ld g p b c =
+  do x <- g
+     p x
+     incPC b
+     putCycles c
+
 --
 
+-- | LD r8,r8
+-- | 1 byte
+-- | 4 cycles
 ld_r8_r8 :: R8 -> R8 -> GB ()
-ld_r8_r8 r0 r1 = putR8 r0 =<< getR8 r1
+ld_r8_r8 r0 r1 = ld (getR8 r1) (putR8 r0) 1 4
 
+-- | LD r8,(hl)
+-- | 1 byte
+-- | 8 cycles
 ld_r8_ihl :: R8 -> GB ()
-ld_r8_ihl r = putR8 r =<< getIHL
+ld_r8_ihl r = ld (getIHL) (putR8 r) 1 8
 
+-- | LD (hl),r8
+-- | 1 byte
+-- | 8 cycles
 ld_ihl_r8 :: R8 -> GB ()
-ld_ihl_r8 r = putIHL =<< getR8 r
+ld_ihl_r8 r = ld (getR8 r) putIHL 1 8
 
+-- | LD (hl),u8
+-- | 2 bytes
+-- | 12 cycles
 ld_ihl_u8 :: U8 -> GB ()
-ld_ihl_u8 = putIHL 
+ld_ihl_u8 u = ld (return u) putIHL 2 12
 
+-- | LD a,(r16)
+-- | 1 byte
+-- | 8 cycles
 ld_a_idr :: R16 -> GB ()
-ld_a_idr r = putAFromRam8 =<< getR16 r
+ld_a_idr r = ld (getR16 r) putAFromRam8 1 8
 
+-- | LD a,(a16)
+-- | 3 byte
+-- | 16 cycles
 ld_a_a16 :: A16 -> GB ()
-ld_a_a16 = putAFromRam8
+ld_a_a16 a = ld (return a) putAFromRam8 3 16
 
+-- | LD a,u8
+-- | 2 byte
+-- | 8 cycles
 ld_a_u8 :: U8 -> GB ()
-ld_a_u8 = putA
+ld_a_u8 u = ld (return u) putA 2 8
 
+-- | LD (r16),a
+-- | 1 byte
+-- | 8 cycles
 ld_idr_a :: R16 -> GB ()
-ld_idr_a r = putRam8FromA =<< getR16 r
+ld_idr_a r = ld (getR16 r) putRam8FromA 1 8
 
+-- | LD (a16),a
+-- | 3 bytes
+-- | 16 cycles
 ld_a16_a :: A16 -> GB ()
-ld_a16_a = putRam8FromA
+ld_a16_a a = ld (return a) putRam8FromA 3 16
 
+-- | LD a,(c)
+-- | 2 bytes
+-- | 8 cycles
 ld_a_idr_c :: GB ()
-ld_a_idr_c = putAFromRam8 . offsetFF00h =<< getC
+ld_a_idr_c = ld getC (putAFromRam8 . offsetFF00h) 2 8
 
+-- | LD (c),a
+-- | 2 bytes
+-- | 8 cycles
 ld_idr_c_a :: GB ()
-ld_idr_c_a = putRam8FromA . offsetFF00h =<< getC
+ld_idr_c_a = ld getC (putRam8FromA . offsetFF00h) 2 8
 
+-- | LDH (a8),a
+-- | 2 bytes
+-- | 12 cycles
 ldh_a8_a :: A8 -> GB ()
-ldh_a8_a a = putRam8FromA (offsetFF00h a)
+ldh_a8_a a = ld (return a) (putRam8FromA . offsetFF00h) 2 12
 
+-- | LD r16,u16
+-- | 3 bytes
+-- | 12 cycles
 ld_r16_u16 :: R16 -> U16 -> GB ()
-ld_r16_u16 = putR16
+ld_r16_u16 r u = ld (return u) (putR16 r) 3 12
 
+-- | LD sp,hl
+-- | 1 byte
+-- | 8 cycles
 ld_sp_hl :: GB ()
-ld_sp_hl = putSP =<< getHL
+ld_sp_hl = ld getHL putSP 1 8
 
-ldhl_sp_s8 :: U8 -> GB ()
+-- | LDHL sp,r8 
+-- | 2 bytes
+-- | 12 cycles
+ldhl_sp_s8 :: S8 -> GB () -- redo
 ldhl_sp_s8 s =
   do sp <- getSP
      let d = num (0x7f .&. s)
-     if testBit s 7
+     if s < 0
         then do let res = sp - d
                     hf = low sp < d
                     cf = res > sp
@@ -290,8 +132,13 @@ ldhl_sp_s8 s =
                 putHL res 
   where low = (.&. 0x000f)
 
+-- | LD (a16),sp
+-- | 3 bytes
+-- | 20 cycles
 ld_a16_sp :: A16 -> GB ()
-ld_a16_sp a = putRam16 a =<< getSP
+ld_a16_sp a = ld getSP (putRam16 a) 3 20
+
+--
 
 push_r16 :: R16 -> GB ()
 push_r16 r =
@@ -711,8 +558,8 @@ jp_cc_a16 cc a =
           CC_C  -> cf
           CC_NC -> cf
      if cond
-        then putPC a
-        else incPC (bytes JP_cc_a16)
+        then putPC a >> putCycles 12
+        else incPC 3 >> putCycles 16
  
 
 jp_ihl :: GB ()
@@ -725,7 +572,7 @@ jr_s8 a =
   do pc <- getPC
      let a' = num a :: S16
          pc' = num pc :: S16
-     putPC (num $ pc' + a')
+     putPC (num $ pc' + a') >> putCycles 12
 
 jr_cc_s8 :: CC -> S8 -> GB ()
 jr_cc_s8 cc a =
@@ -740,8 +587,8 @@ jr_cc_s8 cc a =
            CC_C  -> cf
            CC_NC -> cf
      if cond
-        then putPC (num $ pc' + a')
-        else incPC (bytes JR_cc_s8)
+        then putPC (num $ pc' + a') >> putCycles 8
+        else incPC 2 >> putCycles 12
 
 ----
 
@@ -754,9 +601,15 @@ callA a =
 
 --
 
+-- CALL a16
+-- 12 cycles
+-- 3 bytes
 call_a16 :: A16 -> GB ()
 call_a16 = callA
 
+-- CALL cc a16
+-- 12 cycles
+-- 3 bytes
 call_cc_a16 :: CC -> A16 -> GB ()
 call_cc_a16 cc a =
   do zf <- getZF
@@ -770,8 +623,9 @@ call_cc_a16 cc a =
         then callA a
         else decPC 2
 
---
-
+-- RST a16, where a16 is one of {$00, $08, $18, $20, $28, $30, $38}
+-- _ cycles
+-- 1 byte
 rst_a16 :: A16 -> GB ()
 rst_a16 a =
   do pc <- getPC
@@ -779,12 +633,39 @@ rst_a16 a =
      decSP 2
      putPC a
 
+----
+
+--
+
+-- RET
+-- 16 cycles
+-- 1 byte
 ret :: GB ()
 ret =
   do pc <- getISP
      putPC pc
      incSP 2
 
+-- RET cc
+-- 16 cycles
+-- 1 byte
+ret_cc :: CC -> GB ()
+ret_cc cc =
+  do zf <- getZF
+     cf <- getCF
+     let cond = case cc of
+           CC_Z  -> zf
+           CC_NZ -> zf
+           CC_C  -> cf
+           CC_NC -> cf
+     if cond
+        then ret
+        else incPC 2
+
+
+-- RETI
+-- 16 cycles
+-- 1 byte
 reti :: GB ()
 reti =
   do pc <- getISP

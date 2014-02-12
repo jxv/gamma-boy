@@ -310,3 +310,18 @@ decSP d = modifyR16 SP ((-) d)
 decPC :: U16 -> GB ()
 decPC d = modifyR16 PC ((-) d)
 
+----
+
+
+getCycles :: GB S8
+getCycles =
+  do rc <- gets cycles
+     io (readIORef rc)
+
+putCycles :: S8 -> GB ()
+putCycles s = 
+  do rc <- gets cycles
+     io (writeIORef rc s)
+
+
+

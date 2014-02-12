@@ -1,9 +1,10 @@
 module GammaBoy.Types where
 
-import           Control.Monad.State.Strict (StateT(..))
+import           Control.Monad.State        (StateT(..))
 import           Data.Array.IO              (IOArray, IOUArray)
 import           Data.Word                  (Word8, Word16)
 import           Data.Int                   (Int8, Int16)
+import           Data.IORef                 (IORef)
 import           Data.Word.Odd              (Word3)
 
 type U3 = Word3
@@ -20,6 +21,7 @@ type GB a = StateT Mem IO a
 data Mem = Mem
   { ram :: IOUArray A16 U8
   , regs :: IOArray Int U8
+  , cycles :: IORef S8
   }
 
 data R8
