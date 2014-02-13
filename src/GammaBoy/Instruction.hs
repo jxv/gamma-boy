@@ -138,19 +138,29 @@ ldhl_sp_s8 s =
 ld_a16_sp :: A16 -> GB ()
 ld_a16_sp a = ld getSP (putRam16 a) 3 20
 
---
+-----
 
+-- | PUSH r16
+-- | 1 byte
+-- | 16 cycles
 push_r16 :: R16 -> GB ()
 push_r16 r =
   do d <- getR16 r
      putISP d
      decSP 2
+     incPC 1
+     putCycles 16
 
+-- | POP r16
+-- | 1 byte
+-- | 12 cycles
 pop_r16 :: R16 -> GB ()
 pop_r16 r =
   do d <- getISP
      putR16 r d
      incSP 2
+     incPC 1
+     putCycles 12
 
 ----
 
