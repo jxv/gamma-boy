@@ -679,6 +679,7 @@ ret_cc cc =
 reti :: GB ()
 reti =
   do pc <- getISP
+     putPC pc
      incSP 2
      ei
 
