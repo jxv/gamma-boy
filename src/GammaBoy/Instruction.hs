@@ -6,6 +6,90 @@ import GammaBoy.Util
 
 ----
 
+withU8 :: (U8 -> GB ()) -> GB ()
+withU8 f =
+  do pc <- getPC
+     u <- getRam8 (pc + 1)
+     f u
+
+withU16 :: (U16 -> GB ()) -> GB ()
+withU16 f =
+  do pc <- getPC
+     u <- getRam16 (pc + 1)
+     f u
+
+----
+
+instructions :: Array U8 (GB ())
+instructions = listArray (0x00, 0xff) $
+  [ nop					-- 0x00
+  , withU16 $ ld_r16_u16 BC
+  , ld_idr_a IBC
+  , inc_r16 BC
+  , inc_r8 B				-- 0x04
+  , dec_r8 B
+  , withU8 $ ld_r8_u8 B
+  , rlca
+  , withU16 ld_a16_sp			-- 0x08
+  , add_hl_r16 BC
+  , ld_a_idr IBC
+  , dec_r16 BC
+  , inc_r8 C				-- 0x0c
+  , dec_r8 C
+  , withU8 $ ld_r8_u8 C
+  , rrca
+  , stop				-- 0x10
+  , withU16 $ ld_r16_u16 DE
+  , ld_idr_a IDE
+  , inc_r16 DE
+  , inc_r8 D				-- 0x14
+  , dec_r8 D
+  , withU8 $ ld_r8_u8 D
+  , rla
+  , withU8 $ jr_s8 . num		-- 0x18
+  , add_hl_r16 DE
+  , ld_a_idr IDE
+  , dec_r16 DE
+  , inc_r8 E				-- 0x1c
+  , dec_r8 E
+  , withU8 $ ld_r8_u8 E
+  , rra
+  , withU8 $ jr_cc_s8 CC_NZ . num	-- 0x20
+  , withU16 $ ld_r16_u16 HL
+  , ld_idr_a IHLP
+  , inc_r16 HL
+  , inc_r8 H				-- 0x24
+  , dec_r8 H
+  , withU8 $ ld_r8_u8 H
+  , daa
+  , withU8 $ jr_cc_s8 CC_Z . num	-- 0x28
+  , add_hl_r16 HL
+  , ld_a_idr IHLP
+  , dec_r16 HL
+  , inc_r8 L				-- 0x2c
+  , dec_r8 L
+  , withU8 $ ld_r8_u8 L
+  , cpl
+  , withU8 $ jr_cc_s8 CC_NC . num	-- 0x30
+  , withU16 $ ld_r16_u16 SP
+  , ld_idr_a IHLN
+  , inc_r16 SP
+  , inc_ihl 				-- 0x34
+  , dec_ihl
+  , withU8 $ ld_ihl_u8
+  , scf
+  , withU8 $ jr_cc_s8 CC_C . num	-- 0x38
+  , add_hl_r16 SP
+  , ld_a_idr IHLN
+  , dec_r16 SP
+  , inc_r8 A				-- 0x3c
+  , dec_r8 A
+  , withU8 $ ld_r8_u8 A
+  , ccf
+  ]
+
+----
+
 putAFromRam8 :: A16 -> GB ()
 putAFromRam8 a = putA =<< getRam8 a
 
@@ -53,8 +137,8 @@ ld_ihl_u8 u = ld (return u) putIHL 2 12
 -- | LD a,(r16)
 -- | 1 byte
 -- | 8 cycles
-ld_a_idr :: R16 -> GB ()
-ld_a_idr r = ld (getR16 r) putAFromRam8 1 8
+ld_a_idr :: IDR -> GB ()
+ld_a_idr r = ld (getIDR r) putAFromRam8 1 8
 
 -- | LD a,(a16)
 -- | 3 byte
@@ -62,17 +146,17 @@ ld_a_idr r = ld (getR16 r) putAFromRam8 1 8
 ld_a_a16 :: A16 -> GB ()
 ld_a_a16 a = ld (return a) putAFromRam8 3 16
 
--- | LD a,u8
+-- | LD r8,u8
 -- | 2 byte
 -- | 8 cycles
-ld_a_u8 :: U8 -> GB ()
-ld_a_u8 u = ld (return u) putA 2 8
+ld_r8_u8 :: R8 -> U8 -> GB ()
+ld_r8_u8 r u = ld (return u) (putR8 r) 2 8
 
 -- | LD (r16),a
 -- | 1 byte
 -- | 8 cycles
-ld_idr_a :: R16 -> GB ()
-ld_idr_a r = ld (getR16 r) putRam8FromA 1 8
+ld_idr_a :: IDR -> GB ()
+ld_idr_a r = ld (getIDR r) putRam8FromA 1 8
 
 -- | LD (a16),a
 -- | 3 bytes
@@ -83,14 +167,14 @@ ld_a16_a a = ld (return a) putRam8FromA 3 16
 -- | LD a,(c)
 -- | 2 bytes
 -- | 8 cycles
-ld_a_idr_c :: GB ()
-ld_a_idr_c = ld getC (putAFromRam8 . offsetFF00h) 2 8
+ld_a_idrc :: GB ()
+ld_a_idrc = ld getC (putAFromRam8 . offsetFF00h) 2 8
 
 -- | LD (c),a
 -- | 2 bytes
 -- | 8 cycles
-ld_idr_c_a :: GB ()
-ld_idr_c_a = ld getC (putRam8FromA . offsetFF00h) 2 8
+ld_idrc_a :: GB ()
+ld_idrc_a = ld getC (putRam8FromA . offsetFF00h) 2 8
 
 -- | LDH (a8),a
 -- | 2 bytes

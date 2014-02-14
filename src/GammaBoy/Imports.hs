@@ -9,6 +9,10 @@ import           Control.Applicative        as Imports ((<$>))
 import           Control.Monad.State.Strict as Imports (StateT(..),
                                                         gets)
 import           Control.Monad.IO.Class     as Imports (MonadIO(..))
+import           Data.Array                 as Imports (Array,
+                                                        array,
+                                                        listArray,
+                                                        (!))
 import           Data.Array.IO              as Imports (IOArray,
                                                         IOUArray,
                                                         writeArray,

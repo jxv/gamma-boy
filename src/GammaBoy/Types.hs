@@ -48,6 +48,13 @@ data R16
   | PC
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+data IDR
+  = IBC
+  | IDE
+  | IHLP
+  | IHLN
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
 data Flag
   = ZF -- Zero
   | NF -- Subtract

@@ -5,7 +5,6 @@ import GammaBoy.Types
 
 ----
 
-
 io :: (MonadIO m) => IO a -> m a
 io = liftIO
 
@@ -13,10 +12,9 @@ num :: (Integral a, Num b) => a -> b
 num = fromIntegral
 
 shiftR' :: U8 -> Int -> U8
-shiftR' d s = (shiftR d s) .|. (d .&. (complement (shiftR d 0xff)))
+shiftR' u s = (shiftR u s) .|. (u .&. (complement (shiftR u 0xff)))
 
 -----
-
 
 r8 :: R8 -> Int
 r8 = fromEnum
@@ -31,16 +29,15 @@ sepR16 r = case r of
   PC -> (PC_0, PC_1)
 
 sep16 :: U16 -> (U8, U8)
-sep16 d =
-  let d0 = shiftR (d .&. 0xf0) 4
-      d1 = (d .&. 0x0f)
-  in (num *** num) (d0, d1)
+sep16 u =
+  let u0 = shiftR (u .&. 0xf0) 4
+      u1 = (u .&. 0x0f)
+  in (num *** num) (u0, u1)
 
 cmb8 :: U8 -> U8 -> U16
 cmb8 a b = (shiftL (num a) 4) .|. (num b)
 
 ----
-
 
 getR8 :: R8 -> GB U8
 getR8 r =
@@ -51,24 +48,24 @@ getR16 :: R16 -> GB U16
 getR16 r =
   do rs <- gets regs
      let (r0, r1) = sepR16 r
-     d0 <- io (readArray rs (r8 r0))
-     d1 <- io (readArray rs (r8 r1))
-     let d0' = num d0
-         d1' = num d1
-     return (d0' + d1')
+     u0 <- io (readArray rs (r8 r0))
+     u1 <- io (readArray rs (r8 r1))
+     let u0' = num u0
+         u1' = num u1
+     return (u0' + u1')
 
 putR8 :: R8 -> U8 -> GB ()
-putR8 r d =
+putR8 r u =
   do rs <- gets regs
-     io (writeArray rs (r8 r) d)
+     io (writeArray rs (r8 r) u)
 
 putR16 :: R16 -> U16 -> GB ()
-putR16 r d =
+putR16 r u =
   do rs <- gets regs
      let (r0, r1) = sepR16 r
-         (d0, d1) = sep16 d
-     io (writeArray rs (r8 r0) d0)
-     io (writeArray rs (r8 r1) d1)
+         (u0, u1) = sep16 u
+     io (writeArray rs (r8 r0) u0)
+     io (writeArray rs (r8 r1) u1)
 
 --
 
@@ -182,7 +179,6 @@ putPC = putR16 PC
 
 ----
 
-
 getRam8 :: A16 -> GB U8
 getRam8 a =
   do rm <- gets ram
@@ -191,21 +187,21 @@ getRam8 a =
 getRam16 :: A16 -> GB U16
 getRam16 a =
   do rm <- gets ram
-     d0 <- io (readArray rm a)
-     d1 <- io (readArray rm (a + 1))
-     return (cmb8 d0 d1)
+     u0 <- io (readArray rm a)
+     u1 <- io (readArray rm (a + 1))
+     return (cmb8 u0 u1)
 
 putRam8 :: A16 -> U8 -> GB ()
-putRam8 a d =
+putRam8 a u =
   do rm <- gets ram
-     io (writeArray rm a d)
+     io (writeArray rm a u)
 
 putRam16 :: A16 -> U16 -> GB ()
-putRam16 a d =
+putRam16 a u =
   do rm <- gets ram
-     let (d0, d1) = sep16 d
-     io (writeArray rm a d0)
-     io (writeArray rm (a + 1) d1)
+     let (u0, u1) = sep16 u
+     io (writeArray rm a u0)
+     io (writeArray rm (a + 1) u1)
 
 --
 
@@ -225,22 +221,22 @@ getIPC :: GB U16
 getIPC = getPC >>= getRam16
 
 putIBC :: U8 -> GB ()
-putIBC d = getBC >>= (flip putRam8) d
+putIBC u = getBC >>= (flip putRam8) u
 
 putIDE :: U8 -> GB ()
-putIDE d = getDE >>= (flip putRam8) d
+putIDE u = getDE >>= (flip putRam8) u
 
 putIHL :: U8 -> GB ()
-putIHL d = getHL >>= (flip putRam8) d
+putIHL u = getHL >>= (flip putRam8) u
 
 putISP :: U16 -> GB ()
-putISP d = getSP >>= (flip putRam16) d
+putISP u = getSP >>= (flip putRam16) u
 
 putIPC :: U16 -> GB ()
-putIPC d = getPC >>= (flip putRam16) d
+putIPC u = getPC >>= (flip putRam16) u
 
-----
 
+---- 
 
 flagBit :: Flag -> Int
 flagBit flg = case flg of
@@ -293,25 +289,47 @@ getCF = getFlag CF
 
 modifyR16 :: R16 -> (U16 -> U16) -> GB ()
 modifyR16 r f =
-  do d <- getR16 r
-     putR16 r (f d)
-
---
-
-incSP :: U16 -> GB ()
-incSP d = modifyR16 SP ((+) d)
-
-incPC :: U16 -> GB ()
-incPC d = modifyR16 PC ((+) d)
-
-decSP :: U16 -> GB ()
-decSP d = modifyR16 SP ((-) d)
-
-decPC :: U16 -> GB ()
-decPC d = modifyR16 PC ((-) d)
+  do u <- getR16 r
+     putR16 r (f u)
 
 ----
 
+incHL :: U16 -> GB ()
+incHL u = modifyR16 HL ((+) u)
+
+incSP :: U16 -> GB ()
+incSP u = modifyR16 SP ((+) u)
+
+incPC :: U16 -> GB ()
+incPC u = modifyR16 PC ((+) u)
+
+decHL :: U16 -> GB ()
+decHL u = modifyR16 HL ((-) u)
+
+decSP :: U16 -> GB ()
+decSP u = modifyR16 SP ((-) u)
+
+decPC :: U16 -> GB ()
+decPC u = modifyR16 PC ((-) u)
+
+----
+
+getIDR :: IDR -> GB U16
+getIDR r = case r of
+  IBC  -> getR16 BC
+  IDE  -> getR16 DE
+  IHLP ->
+    do a <- getHL
+       u <- getRam16 a
+       putHL (a + 1)
+       return u
+  IHLN ->
+    do a <- getHL
+       u <- getRam16 a
+       putHL (a - 1)
+       return u
+
+----
 
 getCycles :: GB S8
 getCycles =
@@ -322,6 +340,4 @@ putCycles :: S8 -> GB ()
 putCycles s = 
   do rc <- gets cycles
      io (writeIORef rc s)
-
-
 
