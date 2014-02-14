@@ -6,7 +6,6 @@ import GammaBoy.Util
 
 ----
 
-
 putAFromRam8 :: A16 -> GB ()
 putAFromRam8 a = putA =<< getRam8 a
 
@@ -18,7 +17,6 @@ offsetFF00h a = 0xff00 + num a
 
 ----
 
-
 ld :: GB a -> (a -> GB ()) -> U16 -> S8 -> GB ()
 ld g p b c =
   do x <- g
@@ -26,7 +24,7 @@ ld g p b c =
      incPC b
      putCycles c
 
---
+----
 
 -- | LD r8,r8
 -- | 1 byte
@@ -38,7 +36,7 @@ ld_r8_r8 r0 r1 = ld (getR8 r1) (putR8 r0) 1 4
 -- | 1 byte
 -- | 8 cycles
 ld_r8_ihl :: R8 -> GB ()
-ld_r8_ihl r = ld (getIHL) (putR8 r) 1 8
+ld_r8_ihl r = ld getIHL (putR8 r) 1 8
 
 -- | LD (hl),r8
 -- | 1 byte
@@ -164,9 +162,8 @@ pop_r16 r =
 
 ----
 
-
-addA_ :: GB U8 -> GB ()
-addA_ md =
+addA :: GB U8 -> U16 -> S8 -> GB ()
+addA md b c =
   do d <- md
      da <- getA
      let res  = d + da
@@ -175,10 +172,12 @@ addA_ md =
          hf = testBit (low d + low da) 4
      putFlags zf False hf cf
      putA res
+     incPC b
+     putCycles c
    where low = (.&. 0x0f)
 
-adcA_ :: GB U8 -> GB ()
-adcA_ md =
+adcA :: GB U8 -> U16 -> S8 -> GB ()
+adcA md b c =
   do d <- md
      da <- getA
      cb <- fromBool <$> getCF
@@ -188,30 +187,49 @@ adcA_ md =
          hf = testBit (low d + low da + cb) 4
      putFlags zf False hf cf
      putA res
+     incPC b
+     putCycles c
    where low = (.&. 0x0f)
-
---
-
-add_a_r8 :: R8 -> GB ()
-add_a_r8 = addA_ . getR8
-
-add_a_ihl :: GB ()
-add_a_ihl = addA_ getIHL
-
-add_a_u8 :: U8 -> GB ()
-add_a_u8 = addA_ . return
-
-adc_a_r8 :: R8 -> GB ()
-adc_a_r8 = adcA_ . getR8
-
-adc_a_ihl :: GB ()
-adc_a_ihl = adcA_ getIHL
-     
-adc_a_u8 :: U8 -> GB ()
-adc_a_u8 = adcA_ . return
 
 ----
 
+-- ADD a,r8
+-- 1 byte
+-- 4 cycles
+add_a_r8 :: R8 -> GB ()
+add_a_r8 r = addA (getR8 r) 1 4
+
+-- ADD a,(hl)
+-- 1 byte
+-- 8 cycles
+add_a_ihl :: GB ()
+add_a_ihl = addA getIHL 1 8
+
+-- ADD a,u8
+-- 2 bytes
+-- 8 cycles
+add_a_u8 :: U8 -> GB ()
+add_a_u8 u = addA (return u) 2 8
+
+-- ADC a,r8
+-- 1 byte
+-- 4 cycles
+adc_a_r8 :: R8 -> GB ()
+adc_a_r8 r = adcA (getR8 r) 1 4
+
+-- ADC a,(hl)
+-- 1 byte
+-- 8 cycles
+adc_a_ihl :: GB ()
+adc_a_ihl = adcA getIHL 1 8
+
+-- ADC a,u8
+-- 2 bytes
+-- 8 cycles
+adc_a_u8 :: U8 -> GB ()
+adc_a_u8 u = adcA (return u) 2 8
+
+----
 
 subA_ :: GB U8 -> GB ()
 subA_ md =
