@@ -287,6 +287,77 @@ instructions = listArray (0x00, 0xff) $
 
 ----
 
+instructionsPrefixCB :: Array U8 (GB ())
+instructionsPrefixCB = listArray (0x00, 0xff) $
+  [ rlc_r8 B		-- 0x00
+  , rlc_r8 C
+  , rlc_r8 D
+  , rlc_r8 E
+  , rlc_r8 H		-- 0x04
+  , rlc_r8 L
+  , rlc_ihl
+  , rlc_r8 A
+  , rrc_r8 B		-- 0x08
+  , rrc_r8 C
+  , rrc_r8 D
+  , rrc_r8 E
+  , rrc_r8 H		-- 0x0c
+  , rrc_r8 L
+  , rrc_ihl
+  , rrc_r8 A
+  , rl_r8 B		-- 0x10
+  , rl_r8 C
+  , rl_r8 D
+  , rl_r8 E
+  , rl_r8 H		-- 0x14
+  , rl_r8 L
+  , rl_ihl
+  , rl_r8 A
+  , rr_r8 B		-- 0x18
+  , rr_r8 C
+  , rr_r8 D
+  , rr_r8 E
+  , rr_r8 H		-- 0x1c
+  , rr_r8 L
+  , rr_ihl
+  , rr_r8 A
+  , sla_r8 B		-- 0x20
+  , sla_r8 C
+  , sla_r8 D
+  , sla_r8 E
+  , sla_r8 H		-- 0x24
+  , sla_r8 L
+  , sla_ihl
+  , sla_r8 A
+  , sra_r8 B		-- 0x28
+  , sra_r8 C
+  , sra_r8 D
+  , sra_r8 E
+  , sra_r8 H		-- 0x2c
+  , sra_r8 L
+  , sra_ihl
+  , sra_r8 A
+  , swap_r8 B		-- 0x30
+  , swap_r8 C
+  , swap_r8 D
+  , swap_r8 E
+  , swap_r8 H		-- 0x34
+  , swap_r8 L
+  , swap_ihl
+  , swap_r8 A
+  , srl_r8 B		-- 0x38
+  , srl_r8 C
+  , srl_r8 D
+  , srl_r8 E
+  , srl_r8 H		-- 0x3c
+  , srl_r8 L
+  , srl_ihl
+  , srl_r8 A
+  ]
+  
+
+----
+
 putAFromRam8 :: A16 -> GB ()
 putAFromRam8 a = putA =<< getRam8 a
 
@@ -815,6 +886,12 @@ srl_r8 r = mvBits (getR8 r) (putR8 r) shiftR 0
 
 srl_ihl :: GB ()
 srl_ihl = mvBits getIHL putIHL shiftR 0
+
+swap_r8 :: R8 -> GB ()
+swap_r8 r = return () -- todo
+
+swap_ihl :: GB ()
+swap_ihl = return () -- todo
 
 ----
 
