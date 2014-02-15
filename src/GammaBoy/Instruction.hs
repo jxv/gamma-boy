@@ -1,4 +1,4 @@
-module GammaBoy.Instruction where
+module GammaBoy.Instruction (instructions) where
 
 import GammaBoy.Imports
 import GammaBoy.Types
@@ -86,7 +86,204 @@ instructions = listArray (0x00, 0xff) $
   , dec_r8 A
   , withU8 $ ld_r8_u8 A
   , ccf
+  , ld_r8_r8 B B			-- 0x40
+  , ld_r8_r8 B C
+  , ld_r8_r8 B D
+  , ld_r8_r8 B E
+  , ld_r8_r8 B H			-- 0x44
+  , ld_r8_r8 B L
+  , ld_r8_ihl B
+  , ld_r8_r8 B A
+  , ld_r8_r8 C B			-- 0x48
+  , ld_r8_r8 C C
+  , ld_r8_r8 C D
+  , ld_r8_r8 C E
+  , ld_r8_r8 C H			-- 0x4c
+  , ld_r8_r8 C L
+  , ld_r8_ihl C
+  , ld_r8_r8 C A
+  , ld_r8_r8 D B			-- 0x50
+  , ld_r8_r8 D C
+  , ld_r8_r8 D D
+  , ld_r8_r8 D E
+  , ld_r8_r8 D H			-- 0x54
+  , ld_r8_r8 D L
+  , ld_r8_ihl D
+  , ld_r8_r8 D A
+  , ld_r8_r8 E B			-- 0x58
+  , ld_r8_r8 E C
+  , ld_r8_r8 E D
+  , ld_r8_r8 E E
+  , ld_r8_r8 E H			-- 0x5c
+  , ld_r8_r8 E L
+  , ld_r8_ihl E
+  , ld_r8_r8 E A
+  , ld_r8_r8 H B			-- 0x60
+  , ld_r8_r8 H C
+  , ld_r8_r8 H D
+  , ld_r8_r8 H E
+  , ld_r8_r8 H H			-- 0x64
+  , ld_r8_r8 H L
+  , ld_r8_ihl H
+  , ld_r8_r8 H A
+  , ld_r8_r8 L B			-- 0x68
+  , ld_r8_r8 L C
+  , ld_r8_r8 L D
+  , ld_r8_r8 L E
+  , ld_r8_r8 L H			-- 0x6c
+  , ld_r8_r8 L L
+  , ld_r8_ihl L
+  , ld_r8_r8 L A
+  , ld_ihl_r8 B				-- 0x70
+  , ld_ihl_r8 C
+  , ld_ihl_r8 D
+  , ld_ihl_r8 E
+  , ld_ihl_r8 H				-- 0x74
+  , ld_ihl_r8 L
+  , halt
+  , ld_ihl_r8 A
+  , ld_r8_r8 A B			-- 0x78
+  , ld_r8_r8 A C
+  , ld_r8_r8 A D
+  , ld_r8_r8 A E
+  , ld_r8_r8 A H			-- 0x7c
+  , ld_r8_r8 A L
+  , ld_r8_ihl A
+  , ld_r8_r8 A A
+  , add_a_r8 B				-- 0x80
+  , add_a_r8 C
+  , add_a_r8 D
+  , add_a_r8 E
+  , add_a_r8 H				-- 0x84
+  , add_a_r8 L
+  , add_a_ihl
+  , add_a_r8 A
+  , adc_a_r8 B				-- 0x88
+  , adc_a_r8 C
+  , adc_a_r8 D
+  , adc_a_r8 E
+  , adc_a_r8 H				-- 0x8c
+  , adc_a_r8 L
+  , adc_a_ihl
+  , adc_a_r8 A
+  , sub_a_r8 B				-- 0x90
+  , sub_a_r8 C
+  , sub_a_r8 D
+  , sub_a_r8 E
+  , sub_a_r8 H				-- 0x94
+  , sub_a_r8 L
+  , sub_a_ihl
+  , sub_a_r8 A
+  , sbc_a_r8 B				-- 0x98
+  , sbc_a_r8 C
+  , sbc_a_r8 D
+  , sbc_a_r8 E
+  , sbc_a_r8 H				-- 0x9c
+  , sbc_a_r8 L
+  , sbc_a_ihl
+  , sbc_a_r8 A
+  , and_a_r8 B				-- 0xa0
+  , and_a_r8 C
+  , and_a_r8 D
+  , and_a_r8 E
+  , and_a_r8 H				-- 0xa4
+  , and_a_r8 L
+  , and_a_ihl
+  , and_a_r8 A
+  , xor_a_r8 B				-- 0xa8
+  , xor_a_r8 C
+  , xor_a_r8 D
+  , xor_a_r8 E
+  , xor_a_r8 H				-- 0xac
+  , xor_a_r8 L
+  , xor_a_ihl
+  , xor_a_r8 A
+  , or_a_r8 B				-- 0xb0
+  , or_a_r8 C
+  , or_a_r8 D
+  , or_a_r8 E
+  , or_a_r8 H				-- 0xb4
+  , or_a_r8 L
+  , or_a_ihl
+  , or_a_r8 A
+  , cp_a_r8 B				-- 0xb8
+  , cp_a_r8 C
+  , cp_a_r8 D
+  , cp_a_r8 E
+  , cp_a_r8 H				-- 0xbc
+  , cp_a_r8 L
+  , cp_a_ihl
+  , cp_a_r8 A
+  , ret_cc CC_NZ			-- 0xc0
+  , pop_r16 BC
+  , withU16 $ jp_cc_a16 CC_NZ
+  , withU16 $ jp_a16
+  , withU16 $ call_cc_a16 CC_NZ		-- 0xc4
+  , push_r16 BC
+  , withU8 $ add_a_u8
+  , rst_a16 0x00
+  , ret_cc CC_Z				-- 0xc8
+  , ret
+  , withU16 $ jp_cc_a16 CC_Z
+  , prefix_cb
+  , withU16 $ call_cc_a16 CC_Z		-- 0xcc
+  , withU16 $ call_a16
+  , withU8 $ adc_a_u8
+  , rst_a16 0x08
+  , ret_cc CC_NC			-- 0xd0
+  , pop_r16 DE
+  , withU16 $ jp_cc_a16 CC_NC
+  , failure 0xd3
+  , withU16 $ call_cc_a16 CC_NC		-- 0xd4
+  , push_r16 DE
+  , withU8 $ sub_a_u8
+  , rst_a16 0x10
+  , ret_cc CC_Z				-- 0xd8
+  , reti
+  , withU16 $ jp_cc_a16 CC_C
+  , failure 0xdb
+  , withU16 $ call_a16			-- 0xdc
+  , failure 0xdd
+  , withU8 $ sbc_a_u8
+  , rst_a16 0x18
+  , withU8 $ ldh_a8_a			-- 0xe0
+  , pop_r16 HL
+  , ld_idrc_a
+  , failure 0xe3
+  , failure 0xe4			-- 0xe4
+  , push_r16 HL
+  , withU8 $ and_a_u8
+  , withU16 $ rst_a16
+  , withU8 $ add_sp_s8			-- 0xe8
+  , jp_ihl
+  , withU16 $ ld_a16_a
+  , failure 0xeb
+  , failure 0xec			-- 0xec
+  , failure 0xed
+  , withU8 $ xor_a_u8
+  , rst_a16 0x28
+  , withU8 $ ldh_a_a8			-- 0xf0
+  , pop_r16 AF
+  , ld_a_idrc
+  , di
+  , failure 0xf4			-- 0xf4
+  , push_r16 AF
+  , withU8 $ or_a_u8
+  , rst_a16 0x30
+  , withU8 $ ldhl_sp_s8 . num		-- 0xf8
+  , ld_sp_hl
+  , withU16 $ ld_a_a16
+  , ei
+  , failure 0xfc			-- 0xfc
+  , failure 0xfd
+  , withU8 $ cp_a_u8
+  , rst_a16 0x38
   ]
+  where
+    failure op =
+      do pc <- getPC
+         let msg = "bad opcode " ++ show op ++ " @ address " ++ show pc
+         fail msg
 
 ----
 
@@ -181,6 +378,12 @@ ld_idrc_a = ld getC (putRam8FromA . offsetFF00h) 2 8
 -- | 12 cycles
 ldh_a8_a :: A8 -> GB ()
 ldh_a8_a a = ld (return a) (putRam8FromA . offsetFF00h) 2 12
+
+-- | LDH a,(a8)
+-- | 2 bytes
+-- | 12 cycles
+ldh_a_a8 :: A8 -> GB ()
+ldh_a_a8 a = ld (return a) (putAFromRam8 . offsetFF00h) 2 12
 
 -- | LD r16,u16
 -- | 3 bytes
@@ -784,5 +987,11 @@ reti =
      putPC pc
      incSP 2
      ei
+
+-- PREFIX CB
+-- 1 byte
+-- 4 cycles
+prefix_cb :: GB ()
+prefix_cb = return () -- todo
 
 
