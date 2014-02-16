@@ -225,7 +225,7 @@ instructions = listArray (0x00, 0xff) $
   , ret_cc CC_Z				-- 0xc8
   , ret
   , withU16 $ jp_cc_a16 CC_Z
-  , prefix_cb
+  , withU8 $ (!) instructionsPrefixCB
   , withU16 $ call_cc_a16 CC_Z		-- 0xcc
   , withU16 $ call_a16
   , withU8 $ adc_a_u8
@@ -280,10 +280,10 @@ instructions = listArray (0x00, 0xff) $
   , rst_a16 0x38
   ]
   where
+    failure :: U8 -> GB ()
     failure op =
       do pc <- getPC
-         let msg = "bad opcode " ++ show op ++ " @ address " ++ show pc
-         fail msg
+         fail ("bad opcode " ++ show op ++ " @ address " ++ show pc)
 
 ----
 
@@ -353,6 +353,198 @@ instructionsPrefixCB = listArray (0x00, 0xff) $
   , srl_r8 L
   , srl_ihl
   , srl_r8 A
+  , bit_u3_r8 0 B	-- 0x40
+  , bit_u3_r8 0 C
+  , bit_u3_r8 0 D
+  , bit_u3_r8 0 E
+  , bit_u3_r8 0 H	-- 0x44
+  , bit_u3_r8 0 L
+  , bit_u3_ihl 0
+  , bit_u3_r8 0 A
+  , bit_u3_r8 1 B	-- 0x48
+  , bit_u3_r8 1 C
+  , bit_u3_r8 1 D
+  , bit_u3_r8 1 E
+  , bit_u3_r8 1 H	-- 0x4c
+  , bit_u3_r8 1 L
+  , bit_u3_ihl 1
+  , bit_u3_r8 1 A
+  , bit_u3_r8 2 B	-- 0x50
+  , bit_u3_r8 2 C
+  , bit_u3_r8 2 D
+  , bit_u3_r8 2 E
+  , bit_u3_r8 2 H	-- 0x54
+  , bit_u3_r8 2 L
+  , bit_u3_ihl 2
+  , bit_u3_r8 2 A
+  , bit_u3_r8 3 B	-- 0x58
+  , bit_u3_r8 3 C
+  , bit_u3_r8 3 D
+  , bit_u3_r8 3 E
+  , bit_u3_r8 3 H	-- 0x5c
+  , bit_u3_r8 3 L
+  , bit_u3_ihl 3
+  , bit_u3_r8 3 A
+  , bit_u3_r8 4 B	-- 0x60
+  , bit_u3_r8 4 C
+  , bit_u3_r8 4 D
+  , bit_u3_r8 4 E
+  , bit_u3_r8 4 H	-- 0x64
+  , bit_u3_r8 4 L
+  , bit_u3_ihl 4
+  , bit_u3_r8 4 A
+  , bit_u3_r8 5 B	-- 0x68
+  , bit_u3_r8 5 C
+  , bit_u3_r8 5 D
+  , bit_u3_r8 5 E
+  , bit_u3_r8 5 H	-- 0x6c
+  , bit_u3_r8 5 L
+  , bit_u3_ihl 5
+  , bit_u3_r8 5 A
+  , bit_u3_r8 6 B	-- 0x70
+  , bit_u3_r8 6 C
+  , bit_u3_r8 6 D
+  , bit_u3_r8 6 E
+  , bit_u3_r8 6 H	-- 0x74
+  , bit_u3_r8 6 L
+  , bit_u3_ihl 6
+  , bit_u3_r8 6 A
+  , bit_u3_r8 7 B	-- 0x78
+  , bit_u3_r8 7 C
+  , bit_u3_r8 7 D
+  , bit_u3_r8 7 E
+  , bit_u3_r8 7 H	-- 0x7c
+  , bit_u3_r8 7 L
+  , bit_u3_ihl 7
+  , bit_u3_r8 7 A
+  , res_u3_r8 0 B	-- 0x80
+  , res_u3_r8 0 C
+  , res_u3_r8 0 D
+  , res_u3_r8 0 E
+  , res_u3_r8 0 H	-- 0x84
+  , res_u3_r8 0 L
+  , res_u3_ihl 0
+  , res_u3_r8 0 A
+  , res_u3_r8 1 B	-- 0x88
+  , res_u3_r8 1 C
+  , res_u3_r8 1 D
+  , res_u3_r8 1 E
+  , res_u3_r8 1 H	-- 0x8c
+  , res_u3_r8 1 L
+  , res_u3_ihl 1
+  , res_u3_r8 1 A
+  , res_u3_r8 2 B	-- 0x90
+  , res_u3_r8 2 C
+  , res_u3_r8 2 D
+  , res_u3_r8 2 E
+  , res_u3_r8 2 H	-- 0x94
+  , res_u3_r8 2 L
+  , res_u3_ihl 2
+  , res_u3_r8 2 A
+  , res_u3_r8 3 B	-- 0x98
+  , res_u3_r8 3 C
+  , res_u3_r8 3 D
+  , res_u3_r8 3 E
+  , res_u3_r8 3 H	-- 0x9c
+  , res_u3_r8 3 L
+  , res_u3_ihl 3
+  , res_u3_r8 3 A
+  , res_u3_r8 4 B	-- 0xa0
+  , res_u3_r8 4 C
+  , res_u3_r8 4 D
+  , res_u3_r8 4 E
+  , res_u3_r8 4 H	-- 0xa4
+  , res_u3_r8 4 L
+  , res_u3_ihl 4
+  , res_u3_r8 4 A
+  , res_u3_r8 5 B	-- 0xa8
+  , res_u3_r8 5 C
+  , res_u3_r8 5 D
+  , res_u3_r8 5 E
+  , res_u3_r8 5 H	-- 0xac
+  , res_u3_r8 5 L
+  , res_u3_ihl 5
+  , res_u3_r8 5 A
+  , res_u3_r8 6 B	-- 0xb0
+  , res_u3_r8 6 C
+  , res_u3_r8 6 D
+  , res_u3_r8 6 E
+  , res_u3_r8 6 H	-- 0xb4
+  , res_u3_r8 6 L
+  , res_u3_ihl 6
+  , res_u3_r8 6 A
+  , res_u3_r8 7 B	-- 0xb8
+  , res_u3_r8 7 C
+  , res_u3_r8 7 D
+  , res_u3_r8 7 E
+  , res_u3_r8 7 H	-- 0xbc
+  , res_u3_r8 7 L
+  , res_u3_ihl 7
+  , res_u3_r8 7 A
+  , set_u3_r8 0 B	-- 0xc0
+  , set_u3_r8 0 C
+  , set_u3_r8 0 D
+  , set_u3_r8 0 E
+  , set_u3_r8 0 H	-- 0xc4
+  , set_u3_r8 0 L
+  , set_u3_ihl 0
+  , set_u3_r8 0 A
+  , set_u3_r8 1 B	-- 0xc8
+  , set_u3_r8 1 C
+  , set_u3_r8 1 D
+  , set_u3_r8 1 E
+  , set_u3_r8 1 H	-- 0xcc
+  , set_u3_r8 1 L
+  , set_u3_ihl 1
+  , set_u3_r8 1 A
+  , set_u3_r8 2 B	-- 0xd0
+  , set_u3_r8 2 C
+  , set_u3_r8 2 D
+  , set_u3_r8 2 E
+  , set_u3_r8 2 H	-- 0xd4
+  , set_u3_r8 2 L
+  , set_u3_ihl 2
+  , set_u3_r8 2 A
+  , set_u3_r8 3 B	-- 0xd8
+  , set_u3_r8 3 C
+  , set_u3_r8 3 D
+  , set_u3_r8 3 E
+  , set_u3_r8 3 H	-- 0xdc
+  , set_u3_r8 3 L
+  , set_u3_ihl 3
+  , set_u3_r8 3 A
+  , set_u3_r8 4 B	-- 0xe0
+  , set_u3_r8 4 C
+  , set_u3_r8 4 D
+  , set_u3_r8 4 E
+  , set_u3_r8 4 H	-- 0xe4
+  , set_u3_r8 4 L
+  , set_u3_ihl 4
+  , set_u3_r8 4 A
+  , set_u3_r8 5 B	-- 0xe8
+  , set_u3_r8 5 C
+  , set_u3_r8 5 D
+  , set_u3_r8 5 E
+  , set_u3_r8 5 H	-- 0xec
+  , set_u3_r8 5 L
+  , set_u3_ihl 5
+  , set_u3_r8 5 A
+  , set_u3_r8 6 B	-- 0xf0
+  , set_u3_r8 6 C
+  , set_u3_r8 6 D
+  , set_u3_r8 6 E
+  , set_u3_r8 6 H	-- 0xf4
+  , set_u3_r8 6 L
+  , set_u3_ihl 6
+  , set_u3_r8 6 A
+  , set_u3_r8 7 B	-- 0xf8
+  , set_u3_r8 7 C
+  , set_u3_r8 7 D
+  , set_u3_r8 7 E
+  , set_u3_r8 7 H	-- 0xfc
+  , set_u3_r8 7 L
+  , set_u3_ihl 7
+  , set_u3_r8 7 A
   ]
   
 
@@ -923,17 +1115,17 @@ defBit f md p n =
 
 --
 
-set_r8 :: R8 -> U3 -> GB ()
-set_r8 r = defBit setBit (getR8 r) (putR8 r) 
+set_u3_r8 :: U3 -> R8 -> GB ()
+set_u3_r8 u r= defBit setBit (getR8 r) (putR8 r) u
 
-set_ihl :: U3 -> GB ()
-set_ihl = defBit setBit getIHL putIHL
+set_u3_ihl :: U3 -> GB ()
+set_u3_ihl = defBit setBit getIHL putIHL
 
-res_r8 :: R8 -> U3 -> GB ()
-res_r8 r = defBit clearBit (getR8 r) (putR8 r) 
+res_u3_r8 :: U3 -> R8 -> GB ()
+res_u3_r8 u r = defBit clearBit (getR8 r) (putR8 r) u
 
-res_ihl :: U3 -> GB ()
-res_ihl = defBit clearBit getIHL putIHL
+res_u3_ihl :: U3 -> GB ()
+res_u3_ihl = defBit clearBit getIHL putIHL
 
 ----
 
@@ -1054,7 +1246,6 @@ ret_cc cc =
         then ret
         else incPC 2
 
-
 -- RETI
 -- 16 cycles
 -- 1 byte
@@ -1064,11 +1255,4 @@ reti =
      putPC pc
      incSP 2
      ei
-
--- PREFIX CB
--- 1 byte
--- 4 cycles
-prefix_cb :: GB ()
-prefix_cb = return () -- todo
-
 
