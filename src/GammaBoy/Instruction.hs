@@ -663,7 +663,7 @@ ld_sp_hl = ld getHL putSP 1 8
 -- | LDHL sp,r8 
 -- | 2 bytes
 -- | 12 cycles
-ldhl_sp_s8 :: S8 -> GB () -- redo
+ldhl_sp_s8 :: S8 -> GB () -- todo
 ldhl_sp_s8 s =
   do sp <- getSP
      let d = num (0x7f .&. s)
@@ -1004,17 +1004,19 @@ ei = return () -- todo
 ----
 
 
-mvBitsCarry :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> GB ()
-mvBitsCarry md p mv test =
+mvBitsCarry :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> U16 -> S8 -> GB ()
+mvBitsCarry md p mv test b c =
   do d <- md
      let res = mv d 1
          zf = res == 0
          cf = testBit d test
      putFlags zf False False cf
      p res
+     incPC b
+     putCycles c
 
-mvBits :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> GB ()
-mvBits md p mv test =
+mvBits :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> U16 -> S8 -> GB ()
+mvBits md p mv test b c =
   do d <- md
      cb <- fromBool <$> getCF
      let res = (mv d 1) + cb
@@ -1022,66 +1024,129 @@ mvBits md p mv test =
          cf = testBit d test
      putFlags zf False False cf
      p res
+     incPC b
+     putCycles c
 
---
+----
 
+-- RLCA
+-- 1 byte
+-- 4 cycles
 rlca :: GB ()
-rlca = mvBitsCarry getA putA rotateL 7
+rlca = mvBitsCarry getA putA rotateL 7 1 4
 
+-- RLA
+-- 1 byte
+-- 4 cycles
 rla :: GB ()
-rla = mvBits getA putA rotateL 7
+rla = mvBits getA putA rotateL 7 1 4
 
+-- RRCA
+-- 1 byte
+-- 4 cycles
 rrca :: GB ()
-rrca = mvBitsCarry getA putA rotateR 0
+rrca = mvBitsCarry getA putA rotateR 0 1 4
 
+-- RRA
+-- 1 byte
+-- 4 cycles
 rra :: GB ()
-rra = mvBits getA putA rotateR 0
+rra = mvBits getA putA rotateR 0 1 4
 
+-- RLC r8
+-- 2 bytes
+-- 8 cycles
 rlc_r8 :: R8 -> GB ()
-rlc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateL 7
+rlc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateL 7 2 8
 
+-- RLC (hl)
+-- 2 bytes
+-- 16 cycles
 rlc_ihl :: GB ()
-rlc_ihl = mvBitsCarry getIHL putIHL rotateL 7
+rlc_ihl = mvBitsCarry getIHL putIHL rotateL 7 2 16
 
+-- RL r8
+-- 2 bytes
+-- 8 cycles
 rl_r8 :: R8 -> GB ()
-rl_r8 r = mvBits (getR8 r) (putR8 r) rotateL 7
+rl_r8 r = mvBits (getR8 r) (putR8 r) rotateL 7 2 8
 
+-- RL (hl)
+-- 2 bytes
+-- 16 cycles
 rl_ihl :: GB ()
-rl_ihl = mvBits getIHL putIHL rotateL 7
+rl_ihl = mvBits getIHL putIHL rotateL 7 2 16
 
+-- RRC r8
+-- 2 bytes
+-- 8 cycles
 rrc_r8 :: R8 -> GB ()
-rrc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateR 0
+rrc_r8 r = mvBitsCarry (getR8 r) (putR8 r) rotateR 0 2 8
 
+-- RRC (hl)
+-- 2 bytes
+-- 16 cycles
 rrc_ihl :: GB ()
-rrc_ihl = mvBitsCarry getIHL putIHL rotateR 0
+rrc_ihl = mvBitsCarry getIHL putIHL rotateR 0 2 16
 
+-- RR r8
+-- 2 bytes
+-- 8 cycles
 rr_r8 :: R8 -> GB ()
-rr_r8 r = mvBits (getR8 r) (putR8 r) rotateR 0
+rr_r8 r = mvBits (getR8 r) (putR8 r) rotateR 0 2 8
 
+-- RR (hl)
+-- 2 bytes
+-- 8 cycles
 rr_ihl :: GB ()
-rr_ihl = mvBits getIHL putIHL rotateR 0
+rr_ihl = mvBits getIHL putIHL rotateR 0 2 8
 
+-- SLA r8
+-- 2 bytes
+-- 8 cycles
 sla_r8 :: R8 -> GB ()
-sla_r8 r = mvBits (getR8 r) (putR8 r) shiftL 7
+sla_r8 r = mvBits (getR8 r) (putR8 r) shiftL 7 2 8
 
+-- SLA (hl)
+-- 2 bytes
+-- 8 cycles
 sla_ihl :: GB ()
-sla_ihl = mvBits getIHL putIHL shiftL 7
+sla_ihl = mvBits getIHL putIHL shiftL 7 2 16
 
+-- SRA r8
+-- 2 bytes
+-- 8 cycles
 sra_r8 :: R8 -> GB ()
-sra_r8 r = mvBits (getR8 r) (putR8 r) shiftR' 0
+sra_r8 r = mvBits (getR8 r) (putR8 r) shiftR' 0 2 8
 
+-- SRA (hl)
+-- 2 bytes
+-- 16 cycles
 sra_ihl :: GB ()
-sra_ihl = mvBits getIHL putIHL shiftR' 0
+sra_ihl = mvBits getIHL putIHL shiftR' 0 2 16
 
+-- SRL r8
+-- 2 bytes
+-- 8 cycles
 srl_r8 :: R8 -> GB ()
-srl_r8 r = mvBits (getR8 r) (putR8 r) shiftR 0
+srl_r8 r = mvBits (getR8 r) (putR8 r) shiftR 0 2 8
 
+-- SRL (hl)
+-- 2 bytes
+-- 16 cycles
 srl_ihl :: GB ()
-srl_ihl = mvBits getIHL putIHL shiftR 0
+srl_ihl = mvBits getIHL putIHL shiftR 0 2 16
 
+
+-- SWAP r8
+-- 2 bytes
+-- 
 swap_r8 :: R8 -> GB ()
 swap_r8 r = return () -- todo
 
+-- RR r8
+-- 2 bytes
+-- 8 cycles
 swap_ihl :: GB ()
 swap_ihl = return () -- todo
 
@@ -1129,9 +1194,15 @@ res_u3_ihl = defBit clearBit getIHL putIHL
 
 ----
 
+-- JP a16
+-- 3 bytes
+-- 16 cycles
 jp_a16 :: A16 -> GB ()
 jp_a16 = putPC
 
+-- JP cc,a16
+-- 3 bytes
+-- 12 cycles on failure; 16 cycles on success
 jp_cc_a16 :: CC -> A16 -> GB ()
 jp_cc_a16 cc a =
   do zf <- getZF
@@ -1142,22 +1213,28 @@ jp_cc_a16 cc a =
           CC_C  -> cf
           CC_NC -> cf
      if cond
-        then putPC a >> putCycles 12
-        else incPC 3 >> putCycles 16
+        then putPC a >> putCycles 16
+        else incPC 3 >> putCycles 12
  
 
 jp_ihl :: GB ()
 jp_ihl = putPC =<< getHL
 
---
 
+-- JR s8 (Jump from cur addr with signed value)
+-- 2 bytes
+-- 12 cycles
 jr_s8 :: S8 -> GB ()
 jr_s8 a =
   do pc <- getPC
      let a' = num a :: S16
          pc' = num pc :: S16
-     putPC (num $ pc' + a') >> putCycles 12
+     putPC (num $ pc' + a')
+     putCycles 12
 
+-- JR cc,s8 (On success, jump from cur addr with signed value)
+-- 2 bytes
+-- 8 cycles on failure; 12 cycles on success
 jr_cc_s8 :: CC -> S8 -> GB ()
 jr_cc_s8 cc a =
   do zf <- getZF
@@ -1171,29 +1248,30 @@ jr_cc_s8 cc a =
            CC_C  -> cf
            CC_NC -> cf
      if cond
-        then putPC (num $ pc' + a') >> putCycles 8
-        else incPC 2 >> putCycles 12
+        then putPC (num $ pc' + a') >> putCycles 12
+        else incPC 2 >> putCycles 8
 
 ----
 
-callA :: A16 -> GB ()
-callA a =
+callA :: A16 -> S8 -> GB ()
+callA a c =
   do pc <- getPC
      putISP (pc + 2)
      decSP 2
      putPC a
+     putCycles c
 
---
+----
 
 -- CALL a16
--- 12 cycles
 -- 3 bytes
+-- 24 cycles
 call_a16 :: A16 -> GB ()
-call_a16 = callA
+call_a16 a = callA a 24
 
 -- CALL cc a16
--- 12 cycles
 -- 3 bytes
+-- 12 cycles on failure; 20 cycles on success
 call_cc_a16 :: CC -> A16 -> GB ()
 call_cc_a16 cc a =
   do zf <- getZF
@@ -1204,35 +1282,40 @@ call_cc_a16 cc a =
            CC_C  -> cf
            CC_NC -> cf
      if cond
-        then callA a
-        else decPC 2
+        then callA a 24
+        else incPC 3 >> putCycles 12
 
 -- RST a16, where a16 is one of {$00, $08, $18, $20, $28, $30, $38}
--- _ cycles
 -- 1 byte
+-- 16 cycles
 rst_a16 :: A16 -> GB ()
 rst_a16 a =
   do pc <- getPC
      putISP pc
      decSP 2
      putPC a
+     putCycles 16
 
 ----
 
---
+ret' :: S8 -> GB ()
+ret' c =
+  do pc <- getISP
+     incSP 2
+     putPC pc
+     putCycles c
+
+----
 
 -- RET
--- 16 cycles
 -- 1 byte
+-- 16 cycles
 ret :: GB ()
-ret =
-  do pc <- getISP
-     putPC pc
-     incSP 2
+ret = ret' 16
 
 -- RET cc
--- 16 cycles
 -- 1 byte
+-- 8 cycles on failure; 20 cycles on success
 ret_cc :: CC -> GB ()
 ret_cc cc =
   do zf <- getZF
@@ -1243,16 +1326,17 @@ ret_cc cc =
            CC_C  -> cf
            CC_NC -> cf
      if cond
-        then ret
-        else incPC 2
+        then ret' 20
+        else incPC 1 >> putCycles 8
 
 -- RETI
--- 16 cycles
 -- 1 byte
+-- 16 cycles
 reti :: GB ()
 reti =
   do pc <- getISP
-     putPC pc
      incSP 2
      ei
+     putPC pc
+     putCycles 16
 
