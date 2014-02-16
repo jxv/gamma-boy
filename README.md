@@ -7,3 +7,4 @@ Documentation:
 * http://students.washington.edu/fidelp/galp/instr.htm
 * http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 * http://gbdev.gg8.se/wiki
+* http://bgb.bircd.org/pandocs.htm
