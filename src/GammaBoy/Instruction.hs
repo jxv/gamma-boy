@@ -1283,43 +1283,65 @@ swap_ihl = swap getIHL putIHL 2 16
 
 ----
 
-bitD3 :: GB U8 -> (U8 -> GB ()) -> U3 -> GB ()
-bitD3 g p d3 =
-  do d8 <- g
+bitU3 :: GB U8 -> (U8 -> GB ()) -> U3 -> U16 -> S8 -> GB ()
+bitU3 g p u3 b c =
+  do u8 <- g
      cf <- getCF
-     let res = d8 .&. (num d3)
+     let res = u8 .&. (num u3)
          zf = res == 0
      putFlags zf False True cf
      p res
+     incPC b
+     putCycles c
 
 ----
 
+-- BIT u3,r8
+-- 2 bytes
+-- 8 cycles
 bit_u3_r8 :: U3 -> R8 -> GB ()
-bit_u3_r8 d r = bitD3 (getR8 r) (putR8 r) d
+bit_u3_r8 u r = bitU3 (getR8 r) (putR8 r) u 2 8
 
+-- BIT u3,(hl)
+-- 2 bytes
+-- 16 cycles
 bit_u3_ihl :: U3 -> GB ()
-bit_u3_ihl = bitD3 getIHL putIHL
+bit_u3_ihl u = bitU3 getIHL putIHL u 2 16
 
 ----
 
-defBit :: (U8 -> Int -> U8) -> GB U8 -> (U8 -> GB ()) -> U3 -> GB ()
-defBit f md p n =
+defBit :: (U8 -> Int -> U8) -> GB U8 -> (U8 -> GB ()) -> U3 -> U16 -> S8 -> GB ()
+defBit f md p n b c =
   do d <- md
      p (f d (num n))
+     incPC b
+     putCycles c
 
 ----
 
+-- SET u3,r8
+-- 2 bytes
+-- 8 cycles
 set_u3_r8 :: U3 -> R8 -> GB ()
-set_u3_r8 u r= defBit setBit (getR8 r) (putR8 r) u
+set_u3_r8 u r= defBit setBit (getR8 r) (putR8 r) u 2 8
 
+-- SET u3,(hl)
+-- 2 bytes
+-- 16 cycles
 set_u3_ihl :: U3 -> GB ()
-set_u3_ihl = defBit setBit getIHL putIHL
+set_u3_ihl u = defBit setBit getIHL putIHL u 2 16
 
+-- RES u3,r8
+-- 2 bytes
+-- 8 cycles
 res_u3_r8 :: U3 -> R8 -> GB ()
-res_u3_r8 u r = defBit clearBit (getR8 r) (putR8 r) u
+res_u3_r8 u r = defBit clearBit (getR8 r) (putR8 r) u 2 8
 
+-- RES u3,(hl)
+-- 2 bytes
+-- 16 cycles
 res_u3_ihl :: U3 -> GB ()
-res_u3_ihl = defBit clearBit getIHL putIHL
+res_u3_ihl u = defBit clearBit getIHL putIHL u 2 16
 
 ----
 
@@ -1327,7 +1349,7 @@ res_u3_ihl = defBit clearBit getIHL putIHL
 -- 3 bytes
 -- 16 cycles
 jp_a16 :: A16 -> GB ()
-jp_a16 = putPC
+jp_a16 a = putPC a >> putCycles 16
 
 -- JP cc,a16
 -- 3 bytes
@@ -1345,9 +1367,11 @@ jp_cc_a16 cc a =
         then putPC a >> putCycles 16
         else incPC 3 >> putCycles 12
  
-
+-- JP (hl)
+-- 1 byte
+-- 4 cycles
 jp_ihl :: GB ()
-jp_ihl = putPC =<< getHL
+jp_ihl = getHL >>= putPC >> putCycles 4
 
 
 -- JR s8 (Jump from cur addr with signed value)
