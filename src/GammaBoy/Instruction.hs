@@ -1,8 +1,16 @@
-module GammaBoy.Instruction (instructions) where
+module GammaBoy.Instruction (stepInstruction) where
 
 import GammaBoy.Imports
 import GammaBoy.Types
 import GammaBoy.Util
+
+----
+
+stepInstruction :: GB ()
+stepInstruction =
+  do pc <- getPC
+     inst <- getRam8 pc
+     instructions ! inst
 
 ----
 
@@ -781,8 +789,8 @@ adc_a_u8 u = adcA (return u) 2 8
 
 ----
 
-subA_ :: GB U8 -> GB ()
-subA_ md =
+subA :: GB U8 -> U16 -> S8 -> GB ()
+subA md b c =
   do d <- md
      da <- getA
      let res  = da - d
@@ -791,10 +799,12 @@ subA_ md =
          hf = low da < low d
      putFlags zf False hf cf
      putA res
+     incPC b
+     putCycles c
    where low = (.&. 0x0f)
 
-sbcA_ :: GB U8 -> GB ()
-sbcA_ md =
+sbcA :: GB U8 -> U16 -> S8 -> GB ()
+sbcA md b c =
   do d <- md
      da <- getA
      cb <- fromBool <$> getCF
@@ -804,33 +814,52 @@ sbcA_ md =
          hf = (low da - low d + cb) > da
      putFlags zf False hf cf
      putA res
+     incPC b
+     putCycles c
    where low = (.&. 0x0f)
 
 --
 
+-- SUB a,r8
+-- 1 bytes
+-- 4 cycles
 sub_a_r8 :: R8 -> GB ()
-sub_a_r8 = subA_ . getR8
+sub_a_r8 r = subA (getR8 r) 1 4
 
+-- SUB a,(hl)
+-- 1 bytes
+-- 8 cycles
 sub_a_ihl :: GB ()
-sub_a_ihl = subA_ getIHL
-     
+sub_a_ihl = subA getIHL 1 8
+
+-- SUB a,u8
+-- 2 bytes
+-- 8 cycles
 sub_a_u8 :: U8 -> GB ()
-sub_a_u8 = subA_ . return
+sub_a_u8 u = subA (return u) 2 8
 
+-- SBC a,r8
+-- 1 bytes
+-- 4 cycles
 sbc_a_r8 :: R8 -> GB ()
-sbc_a_r8 = sbcA_ . getR8
+sbc_a_r8 r = sbcA (getR8 r) 1 4
 
+-- SBC a,(hl)
+-- 1 bytes
+-- 8 cycles
 sbc_a_ihl :: GB ()
-sbc_a_ihl = sbcA_ getIHL
+sbc_a_ihl = sbcA getIHL 1 8
 
+-- SBC a,u8
+-- 2 bytes
+-- 8 cycles
 sbc_a_u8 :: U8 -> GB ()
-sbc_a_u8 = sbcA_ . return
+sbc_a_u8 u = sbcA (return u) 2 8
 
 ----
 
-
-bitOpA_ :: (U8 -> U8 -> U8) -> GB U8 -> GB ()
-bitOpA_ f md =
+bitOpA :: (U8 -> U8 -> U8) -> GB U8 -> U16 -> S8 -> GB ()
+bitOpA f md b c =
   do d <- md
      k <- getA
      let res = k `f` d
@@ -838,38 +867,66 @@ bitOpA_ f md =
          hf = True
      putFlags zf False hf False
      putA res
-
---
-
-and_a_r8 :: R8 -> GB ()
-and_a_r8 = bitOpA_ (.&.) . getR8
-
-and_a_ihl :: GB ()
-and_a_ihl = bitOpA_ (.&.) getIHL
-
-and_a_u8 :: U8 -> GB ()
-and_a_u8 = bitOpA_ (.&.) . return
-
-xor_a_r8 :: R8 -> GB ()
-xor_a_r8 = bitOpA_ xor . getR8
-
-xor_a_ihl :: GB ()
-xor_a_ihl = bitOpA_ xor getIHL
-
-xor_a_u8 :: U8 -> GB ()
-xor_a_u8 = bitOpA_ xor. return
-
-or_a_r8 :: R8 -> GB ()
-or_a_r8 = bitOpA_ (.|.) . getR8
-
-or_a_ihl :: GB ()
-or_a_ihl = bitOpA_ (.|.) getIHL
-
-or_a_u8 :: U8 -> GB ()
-or_a_u8 = bitOpA_ (.|.) . return
+     incPC b
+     putCycles c
 
 ----
 
+-- AND a,r8
+-- 1 bytes
+-- 4 cycles
+and_a_r8 :: R8 -> GB ()
+and_a_r8 r = bitOpA (.&.) (getR8 r) 1 4
+
+-- AND a,(hl)
+-- 1 bytes
+-- 8 cycles
+and_a_ihl :: GB ()
+and_a_ihl = bitOpA (.&.) getIHL 1 8
+
+-- AND a,u8
+-- 2 bytes
+-- 8 cycles
+and_a_u8 :: U8 -> GB ()
+and_a_u8 u = bitOpA (.&.) (return u) 2 8
+
+-- XOR a,r8
+-- 1 bytes
+-- 4 cycles
+xor_a_r8 :: R8 -> GB ()
+xor_a_r8 r = bitOpA xor (getR8 r) 1 4
+
+-- XOR a,(hl)
+-- 1 bytes
+-- 8 cycles
+xor_a_ihl :: GB ()
+xor_a_ihl = bitOpA xor getIHL 1 8
+
+-- XOR a,u8
+-- 2 bytes
+-- 8 cycles
+xor_a_u8 :: U8 -> GB ()
+xor_a_u8 u = bitOpA xor (return u) 2 8
+
+-- OR a,r8
+-- 1 bytes
+-- 4 cycles
+or_a_r8 :: R8 -> GB ()
+or_a_r8 r = bitOpA (.|.) (getR8 r) 1 4
+
+-- OR a,(hl)
+-- 1 bytes
+-- 8 cycles
+or_a_ihl :: GB ()
+or_a_ihl = bitOpA (.|.) getIHL 1 8
+
+-- OR a,u8
+-- 2 bytes
+-- 8 cycles
+or_a_u8 :: U8 -> GB ()
+or_a_u8 u = bitOpA (.|.) (return u) 2 8
+
+----
 
 cpA_ :: GB U8 -> GB ()
 cpA_ md =
@@ -882,7 +939,7 @@ cpA_ md =
      putFlags zf False hf cf
      where low = (.&. 0x0f)
 
---
+----
 
 cp_a_r8 :: R8 -> GB ()
 cp_a_r8 = cpA_ . getR8
