@@ -7,6 +7,8 @@ module GammaBoy.Imports
 import           Control.Arrow              as Imports ((***))
 import           Control.Applicative        as Imports ((<$>))
 import           Control.Monad.State.Strict as Imports (StateT(..),
+                                                        put,
+                                                        get,
                                                         gets)
 import           Control.Monad.IO.Class     as Imports (MonadIO(..))
 import           Data.Array                 as Imports (Array,

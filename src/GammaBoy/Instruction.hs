@@ -1108,17 +1108,33 @@ scf =
 nop :: GB ()
 nop = incPC 1 >> putCycles 4
 
+-- HALT
+-- 1 byte
+-- 4 cycles
 halt :: GB ()
-halt = return () -- todo
+halt =
+  do mem <- get
+     put mem { mode = LowPowerMode }
 
+-- STOP
+-- 2 bytes
+-- 4 cycles
 stop :: GB ()
-stop = return () -- todo
+stop =
+  do mem <- get
+     put mem { mode = StopMode }
 
+-- DI
+-- 1 byte
+-- 4 cycles
 di :: GB ()
-di = return () -- todo
+di = disableInterrupt >> incPC 1 >> putCycles 4
 
+-- EI
+-- 1 byte
+-- 4 cycles
 ei :: GB ()
-ei = return () -- todo
+ei = enableInterrupt >> incPC 1 >> putCycles 4
 
 ----
 
@@ -1486,10 +1502,5 @@ ret_cc cc =
 -- 1 byte
 -- 16 cycles
 reti :: GB ()
-reti =
-  do pc <- getISP
-     incSP 2
-     ei
-     putPC pc
-     putCycles 16
+reti = enableInterrupt >> ret' 16
 

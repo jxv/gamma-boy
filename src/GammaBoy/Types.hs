@@ -22,7 +22,16 @@ data Mem = Mem
   { ram :: IOUArray A16 U8
   , regs :: IOArray Int U8
   , cycles :: IORef S8
+  , ime :: Bool	-- Interrupt Master Enable Flag
+  , mode :: Mode
   }
+
+data Mode
+  = SplashMode
+  | NormalMode
+  | StopMode
+  | LowPowerMode
+  deriving (Bounded, Enum, Eq, Ord, Show)
 
 data R8
   = A

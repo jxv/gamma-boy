@@ -341,3 +341,15 @@ putCycles s =
   do rc <- gets cycles
      io (writeIORef rc s)
 
+----
+
+enableInterrupt :: GB ()
+enableInterrupt =
+  do mem <- get
+     put mem { ime = True }
+
+disableInterrupt :: GB ()
+disableInterrupt =
+  do mem <- get
+     put mem { ime = False }
+
