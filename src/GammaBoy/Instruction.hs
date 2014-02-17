@@ -928,8 +928,8 @@ or_a_u8 u = bitOpA (.|.) (return u) 2 8
 
 ----
 
-cpA :: GB U8 -> GB ()
-cpA md =
+cpA :: GB U8 -> U16 -> S8 -> GB ()
+cpA md b c =
   do d <- md
      da <- getA
      let res  = da - d
@@ -937,6 +937,8 @@ cpA md =
          cf = da < d
          hf = low da < low d 
      putFlags zf False hf cf
+     incPC b
+     putCycles c
      where low = (.&. 0x0f)
 
 ----
@@ -961,8 +963,8 @@ cp_a_u8 u = cpA (return u) 2 8
 
 ----
 
-crement :: (Bits a, Num a) => (a -> a -> a) -> GB a -> (a -> GB ()) -> GB ()
-crement h f g =
+crement :: (Bits a, Num a) => (a -> a -> a) -> GB a -> (a -> GB ()) -> U16 -> S8 -> GB ()
+crement h f g b c =
   do d <- f
      cf <- getCF
      let res = d `h` 1
@@ -970,30 +972,52 @@ crement h f g =
          hf = testBit d 4 /= testBit res 4
      putFlags zf False hf cf
      g res
+     incPC b
+     putCycles c
 
 ----
 
+-- INC r8
+-- 1 byte
+-- 4 cycles
 inc_r8 :: R8 -> GB ()
-inc_r8 r = crement (+) (getR8 r) (putR8 r) 
+inc_r8 r = crement (+) (getR8 r) (putR8 r) 1 4
 
+-- INC (hl)
+-- 1 byte
+-- 12 cycles
 inc_ihl :: GB ()
-inc_ihl = crement (+) getIHL putIHL
+inc_ihl = crement (+) getIHL putIHL 1 12
 
+-- INC r16
+-- 1 byte
+-- 8 cycles
 inc_r16 :: R16 -> GB ()
-inc_r16 r = crement (+) (getR16 r) (putR16 r) 
+inc_r16 r = crement (+) (getR16 r) (putR16 r) 1 8
 
+-- DEC r8
+-- 1 byte
+-- 4 cycles
 dec_r8 :: R8 -> GB ()
-dec_r8 r = crement (-) (getR8 r) (putR8 r) 
+dec_r8 r = crement (-) (getR8 r) (putR8 r) 1 4
 
+-- DEC (hl)
+-- 1 byte
+-- 12 cycles
 dec_ihl :: GB ()
-dec_ihl = crement (-) getIHL putIHL
+dec_ihl = crement (-) getIHL putIHL 1 12
 
+-- DEC r16
+-- 1 byte
+-- 12 cycles
 dec_r16 :: R16 -> GB ()
-dec_r16 r = crement (-) (getR16 r) (putR16 r) 
+dec_r16 r = crement (-) (getR16 r) (putR16 r) 1 8
 
 ----
 
-
+-- ADD hl,r16
+-- 1 byte
+-- 8 cycles
 add_hl_r16 :: R16 -> GB ()
 add_hl_r16 r =
   do dh <- getHL
@@ -1004,9 +1028,14 @@ add_hl_r16 r =
          cf = res < dh || res < dr
      putFlags zf False hf cf
      putHL res
+     incPC 1
+     putCycles 8
   where
     low = (.&. 0x0fff)
 
+-- ADD sp,s8
+-- 2 bytes
+-- 16 cycles
 add_sp_s8 :: U8 -> GB ()
 add_sp_s8 s =
   do sp <- getSP
@@ -1022,8 +1051,13 @@ add_sp_s8 s =
                     cf = res < sp || res < d
                 putFlags False False hf cf
                 putSP res 
+     incPC 2
+     putCycles 16
   where low = (.&. 0x000f)
 
+-- DAA
+-- 1 byte
+-- 4 cycles
 daa :: GB ()
 daa =
   do da <- getA
@@ -1031,7 +1065,12 @@ daa =
          d1 = da `mod` 10
          d = (shiftL d0 4) + d1
      putA d
+     incPC 1
+     putCycles 4
 
+-- CPL
+-- 1 byte
+-- 4 cycles
 cpl :: GB ()
 cpl =
   do zf <- getZF
@@ -1039,20 +1078,35 @@ cpl =
      da <- getA
      putFlags zf True True cf
      putA (complement da)
+     incPC 1
+     putCycles 4
 
+-- CCF
+-- 1 byte
+-- 4 cycles
 ccf :: GB ()
 ccf =
   do zf <- getZF
      cf <- getCF
      putFlags zf False False (not cf)
+     incPC 1
+     putCycles 4
 
+-- SCF
+-- 1 byte
+-- 4 cycles
 scf :: GB ()
 scf =
   do zf <- getZF
      putFlags zf False False True
+     incPC 1
+     putCycles 4
 
+-- NOP
+-- 1 byte
+-- 4 cycles
 nop :: GB ()
-nop = return ()
+nop = incPC 1 >> putCycles 4
 
 halt :: GB ()
 halt = return () -- todo
@@ -1067,7 +1121,6 @@ ei :: GB ()
 ei = return () -- todo
 
 ----
-
 
 mvBitsCarry :: GB U8 -> (U8 -> GB ()) -> (U8 -> Int -> U8) -> Int -> U16 -> S8 -> GB ()
 mvBitsCarry md p mv test b c =
@@ -1202,21 +1255,33 @@ srl_r8 r = mvBits (getR8 r) (putR8 r) shiftR 0 2 8
 srl_ihl :: GB ()
 srl_ihl = mvBits getIHL putIHL shiftR 0 2 16
 
+----
 
--- SWAP r8
--- 2 bytes
--- 
-swap_r8 :: R8 -> GB ()
-swap_r8 r = return () -- todo
-
--- RR r8
--- 2 bytes
--- 8 cycles
-swap_ihl :: GB ()
-swap_ihl = return () -- todo
+swap :: GB U8 -> (U8 -> GB ()) -> U16 -> S8 -> GB ()
+swap g p b c =
+  do u <- g
+     let u0 = shiftR u 4
+         u1 = shiftL u 4
+         u' = u0 .|. u1
+     p u'
+     incPC b
+     putCycles c
 
 ----
 
+-- SWAP r8
+-- 2 bytes
+-- 8 cycles
+swap_r8 :: R8 -> GB ()
+swap_r8 r = swap (getR8 r) (putR8 r) 2 8
+
+-- SWAP (hl)
+-- 2 bytes
+-- 16 cycles
+swap_ihl :: GB ()
+swap_ihl = swap getIHL putIHL 2 16
+
+----
 
 bitD3 :: GB U8 -> (U8 -> GB ()) -> U3 -> GB ()
 bitD3 g p d3 =
@@ -1227,7 +1292,7 @@ bitD3 g p d3 =
      putFlags zf False True cf
      p res
 
---
+----
 
 bit_u3_r8 :: U3 -> R8 -> GB ()
 bit_u3_r8 d r = bitD3 (getR8 r) (putR8 r) d
@@ -1237,13 +1302,12 @@ bit_u3_ihl = bitD3 getIHL putIHL
 
 ----
 
-
 defBit :: (U8 -> Int -> U8) -> GB U8 -> (U8 -> GB ()) -> U3 -> GB ()
 defBit f md p n =
   do d <- md
      p (f d (num n))
 
---
+----
 
 set_u3_r8 :: U3 -> R8 -> GB ()
 set_u3_r8 u r= defBit setBit (getR8 r) (putR8 r) u
