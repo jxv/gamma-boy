@@ -928,8 +928,8 @@ or_a_u8 u = bitOpA (.|.) (return u) 2 8
 
 ----
 
-cpA_ :: GB U8 -> GB ()
-cpA_ md =
+cpA :: GB U8 -> GB ()
+cpA md =
   do d <- md
      da <- getA
      let res  = da - d
@@ -941,17 +941,25 @@ cpA_ md =
 
 ----
 
+-- CP a,r8
+-- 1 bytes
+-- 4 cycles
 cp_a_r8 :: R8 -> GB ()
-cp_a_r8 = cpA_ . getR8
+cp_a_r8 r = cpA (getR8 r) 1 4
 
+-- CP a,(hl)
+-- 1 bytes
+-- 8 cycles
 cp_a_ihl :: GB ()
-cp_a_ihl = cpA_ getIHL
+cp_a_ihl = cpA getIHL 1 8
      
+-- CP a,u8
+-- 2 bytes
+-- 8 cycles
 cp_a_u8 :: U8 -> GB ()
-cp_a_u8 = cpA_ . return
+cp_a_u8 u = cpA (return u) 2 8
 
 ----
-
 
 crement :: (Bits a, Num a) => (a -> a -> a) -> GB a -> (a -> GB ()) -> GB ()
 crement h f g =
@@ -963,7 +971,7 @@ crement h f g =
      putFlags zf False hf cf
      g res
 
---
+----
 
 inc_r8 :: R8 -> GB ()
 inc_r8 r = crement (+) (getR8 r) (putR8 r) 
