@@ -674,19 +674,20 @@ ld_sp_hl = ld getHL putSP 1 8
 ldhl_sp_s8 :: S8 -> GB () -- todo
 ldhl_sp_s8 s =
   do sp <- getSP
-     let d = num (0x7f .&. s)
-     if s < 0
-        then do let res = sp - d
-                    hf = low sp < d
-                    cf = res > sp
-                putFlags False False hf cf
-                putHL res 
-        else do let res = sp + d
-                    hf = testBit (low sp + d) 4
-                    cf = res < sp || res < d
-                putFlags False False hf cf
-                putHL res 
-  where low = (.&. 0x000f)
+     let u = num (abs s) :: U16
+         apply = if s > 0 then (+) else (-)
+         res = sp `apply` u
+         hf = if s > 0
+                 then (low sp) `apply` u < low sp
+                 else (low sp) `apply` u > low sp
+         cf = if s > 0
+                 then res < sp
+                 else res > sp
+     putFlags False False hf cf
+     putHL res
+     incPC 2
+     putCycles 12
+  where low = (.&. 0x00ff)
 
 -- | LD (a16),sp
 -- | 3 bytes
